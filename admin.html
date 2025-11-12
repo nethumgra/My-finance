@@ -1,0 +1,2390 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Business Panel</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons CDN (FIXED) - REMOVED from head -->
+    <style>
+        /* Inter Font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        /* Custom styles for sidebar */
+        .sidebar-item {
+            @apply flex items-center p-3 my-1 rounded-lg text-gray-300 hover:bg-green-700 hover:text-white transition-colors duration-200;
+        }
+        .sidebar-item.active {
+            @apply bg-green-700 text-white shadow-lg;
+        }
+        /* FIX: Removed the broken CSS comment */
+
+        /* Simple Modal */
+        .modal {
+            @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50;
+        }
+        .modal-content {
+            @apply bg-white rounded-lg shadow-xl p-6 w-full max-w-md;
+        }
+        /* Simple Toast */
+        #toast {
+            @apply fixed top-5 right-5 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-[100] transition-transform duration-300 translate-x-[120%];
+        }
+        #toast.show {
+            @apply translate-x-0;
+        }
+        #toast.error {
+            @apply bg-red-600;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="fixed inset-0 bg-gray-900 z-[300] flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Admin Login</h2>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="login-email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                </div>
+                <div>
+                    <label for="login-password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="login-password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                </div>
+                <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center">
+                    <span id="login-btn-text">Login</span>
+                    <i id="login-spinner" data-lucide="loader-2" class="w-5 h-5 ml-2 animate-spin hidden"></i>
+                </button>
+                <p id="login-error" class="text-red-600 text-sm text-center mt-2"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Container (Hidden by default) -->
+    <div id="main-app" class="hidden h-screen bg-gray-100 lg:flex">
+        <!-- Sidebar -->
+        <!-- FIX: Added 'hidden lg:block' to completely hide on mobile -->
+        <div id="sidebar" class="hidden lg:block lg:fixed lg:inset-y-0 lg:left-0 lg:w-64 bg-gray-900 shadow-lg p-4 overflow-y-auto no-scrollbar z-30 lg:translate-x-0 transition-transform duration-300" style="background-color: #1a2c3f;">
+            <div class="flex items-center justify-center mb-6 h-12">
+                <!-- Logo -->
+                <h1 class="text-2xl font-bold text-white">IT Panel</h1>
+            </div>
+            
+            <nav>
+                <!-- 
+                  FIX: Replaced custom CSS classes ".sidebar-item" and ".sidebar-item.active" 
+                  with inline Tailwind classes to prevent styling load failures.
+                  FIX 2: Added a new "sidebar-link" class for JavaScript navigation.
+                -->
+                <a href="#dashboard" class="sidebar-link flex items-center p-3 my-1 rounded-lg text-gray-300 hover:bg-green-700 hover:text-white transition-colors duration-200 bg-green-700 text-white shadow-lg" data-page="dashboard">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>
+                    Dashboard
+                </a>
+                <a href="#clients" class="sidebar-link flex items-center p-3 my-1 rounded-lg text-gray-300 hover:bg-green-700 hover:text-white transition-colors duration-200" data-page="clients">
+                    <i data-lucide="users" class="w-5 h-5 mr-3"></i>
+                    Clients
+                </a>
+                <a href="#quotations" class="sidebar-link flex items-center p-3 my-1 rounded-lg text-gray-300 hover:bg-green-700 hover:text-white transition-colors duration-200" data-page="quotations">
+                    <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
+                    Quotations
+                </a>
+                <a href="#projects" class="sidebar-link flex items-center p-3 my-1 rounded-lg text-gray-300 hover:bg-green-700 hover:text-white transition-colors duration-200" data-page="projects">
+                    <i data-lucide="package" class="w-5 h-5 mr-3"></i>
+                    Projects
+                </a>
+                <a href="#tasks" class="sidebar-link flex items-center p-3 my-1 rounded-lg text-gray-300 hover:bg-green-700 hover:text-white transition-colors duration-200" data-page="tasks">
+                    <i data-lucide="check-square" class="w-5 h-5 mr-3"></i>
+                    Tasks
+                </a>
+                <a href="#recurring" class="sidebar-link flex items-center p-3 my-1 rounded-lg text-gray-300 hover:bg-green-700 hover:text-white transition-colors duration-200" data-page="recurring">
+                    <i data-lucide="repeat" class="w-5 h-5 mr-3"></i>
+                    Recurring Income
+                </a>
+                <a href="#income-expenses" class="sidebar-link flex items-center p-3 my-1 rounded-lg text-gray-300 hover:bg-green-700 hover:text-white transition-colors duration-200" data-page="income-expenses">
+                    <i data-lucide="scale" class="w-5 h-5 mr-3"></i>
+                    Income & Expenses
+                </a>
+                <a href="#next-plans" class="sidebar-link flex items-center p-3 my-1 rounded-lg text-gray-300 hover:bg-green-700 hover:text-white transition-colors duration-200" data-page="next-plans">
+                    <i data-lucide="calendar-check" class="w-5 h-5 mr-3"></i>
+                    Next Plans
+                </a>
+            </nav>
+        </div>
+
+        <!-- Sidebar Overlay (for mobile) -->
+        <!-- FIX: Added 'hidden' to disable overlay system -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden"></div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col lg:ml-64">
+            <!-- Top Bar -->
+            <header class="bg-white shadow-md p-4 flex justify-between items-center z-20">
+                <div class="flex items-center">
+                    <!-- Mobile Menu Toggle -->
+                    <!-- FIX: Added 'hidden' to remove hamburger menu -->
+                    <button id="menu-toggle" class="hidden lg:hidden p-2 rounded-full text-gray-600 hover:bg-gray-100 mr-3">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                    <h2 id="page-title" class="text-xl md:text-2xl font-semibold text-gray-800">Dashboard</h2>
+                </div>
+                <div class="flex items-center space-x-2 md:space-x-4">
+                    <span id="user-status" class="text-sm text-gray-600 hidden sm:block">Connecting...</span>
+                    <button class="p-2 rounded-full text-gray-600 hover:bg-gray-100">
+                        <i data-lucide="bell" class="w-6 h-6"></i>
+                    </button>
+                    <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+                        <i data-lucide="user" class="w-6 h-6 text-gray-600"></i>
+                    </div>
+                    <!-- Sign Out Button -->
+                    <button id="sign-out-btn" class="p-2 rounded-full text-gray-600 hover:bg-red-100 hover:text-red-600">
+                        <i data-lucide="log-out" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <!-- FIX: Added 'pb-20' (padding-bottom) to prevent mobile nav overlap -->
+            <main class="flex-1 p-6 overflow-y-auto pb-20">
+
+                <!-- Dashboard Page -->
+                <div id="page-dashboard" class="page-content">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500 uppercase">Active Projects</p>
+                                    <p id="stat-active-projects" class="text-3xl font-bold text-gray-900">0</p>
+                                </div>
+                                <div class="bg-blue-100 text-blue-600 p-3 rounded-full">
+                                    <i data-lucide="package" class="w-6 h-6"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500 uppercase">Account Balance</p>
+                                    <p id="stat-account-balance" class="text-3xl font-bold text-gray-900">Rs. 0.00</p>
+                                </div>
+                                <button id="quick-add-income" class="bg-green-100 text-green-600 p-3 rounded-full hover:bg-green-200 transition-colors">
+                                    <i data-lucide="plus" class="w-6 h-6"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500 uppercase">Pending Tasks</p>
+                                    <p id="stat-pending-tasks" class="text-3xl font-bold text-gray-900">0</p>
+                                </div>
+                                <div class="bg-yellow-100 text-yellow-600 p-3 rounded-full">
+                                    <i data-lucide="check-square" class="w-6 h-6"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500 uppercase">Total Clients</p>
+                                    <p id="stat-total-clients" class="text-3xl font-bold text-gray-900">0</p>
+                                </div>
+                                <div class="bg-indigo-100 text-indigo-600 p-3 rounded-full">
+                                    <i data-lucide="users" class="w-6 h-6"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts & Lists -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-semibold mb-4">Monthly Income vs Expenses</h3>
+                            <canvas id="incomeExpenseChart"></canvas>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-semibold mb-4">Project Status</h3>
+                            <canvas id="projectStatusChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-semibold mb-4">Upcoming Renewals (Next 30 Days)</h3>
+                            <div id="dashboard-renewals-list" class="space-y-3 max-h-64 overflow-y-auto">
+                                <p class="text-gray-500 text-center">No upcoming renewals.</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="text-lg font-semibold mb-4">Pending Tasks</h3>
+                            <div id="dashboard-tasks-list" class="space-y-3 max-h-64 overflow-y-auto">
+                                <p class="text-gray-500 text-center">No pending tasks.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clients Page -->
+                <div id="page-clients" class="page-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Add Client Form -->
+                        <div class="lg:col-span-1">
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="text-lg font-semibold mb-4">Add New Client</h3>
+                                <form id="add-client-form" class="space-y-4">
+                                    <div>
+                                        <label for="client-name" class="block text-sm font-medium text-gray-700">Client Name</label>
+                                        <input type="text" id="client-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                    </div>
+                                    <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-all duration-200">
+                                        Add Client
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Client List -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="text-lg font-semibold mb-4">Client List</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Phone</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Email</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="client-list" class="bg-white divide-y divide-gray-200">
+                                            <!-- JS populated -->
+                                            <tr><td colspan="4" class="p-4 text-center text-gray-500">Loading clients...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Client Profile Page -->
+                <div id="page-client-profile" class="page-content hidden">
+                    <div class="mb-4">
+                        <button id="back-to-clients-btn" class="flex items-center text-sm text-green-600 hover:underline">
+                            <i data-lucide="arrow-left" class="w-4 h-4 mr-1"></i>
+                            Back to Client List
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                        <h2 id="profile-client-name" class="text-2xl font-bold text-gray-800">Client Name</h2>
+                        <div class="mt-2 text-gray-600">
+                            <p id="profile-client-phone" class="flex items-center"><i data-lucide="phone" class="w-4 h-4 mr-2"></i>-</p>
+                            <p id="profile-client-email" class="flex items-center mt-1"><i data-lucide="mail" class="w-4 h-4 mr-2"></i>-</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold mb-4">Projects for this Client</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="profile-projects-list" class="bg-white divide-y divide-gray-200">
+                                    <!-- JS populated -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quotations Page -->
+                <div id="page-quotations" class="page-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Add Quotation Form -->
+                        <div class="lg:col-span-1">
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="text-lg font-semibold mb-4">Create New Quotation</h3>
+                                <form id="add-quotation-form" class="space-y-4">
+                                    <div>
+                                        <label for="quotation-name" class="block text-sm font-medium text-gray-700">Project Name / Description</label>
+                                        <input type="text" id="quotation-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                    </div>
+                                    <div>
+                                        <label for="quotation-client" class="block text-sm font-medium text-gray-700">Client</label>
+                                        <select id="quotation-client" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                            <!-- JS populated -->
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="quotation-amount" class="block text-sm font-medium text-gray-700">Quoted Amount (Rs.)</label>
+                                        <input type="number" id="quotation-amount" required min="0" step="0.01" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                    </div>
+                                    <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-all duration-200">
+                                        Save Quotation
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Quotation List -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="text-lg font-semibold mb-4">Pending Quotations</h3>
+                                <div id="quotation-list" class="space-y-4 max-h-[70vh] overflow-y-auto">
+                                    <!-- JS populated -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projects Page -->
+                <div id="page-projects" class="page-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Add Project Form -->
+                        <div class="lg:col-span-1">
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="text-lg font-semibold mb-4">Add New Project</h3>
+                                <form id="add-project-form" class="space-y-4">
+                                    <div>
+                                        <label for="project-name" class="block text-sm font-medium text-gray-700">Project Name / Description</label>
+                                        <input type="text" id="project-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                    </div>
+                                    <div>
+                                        <label for="project-client" class="block text-sm font-medium text-gray-700">Client</label>
+                                        <select id="project-client" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                            <!-- JS populated -->
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="project-type" class="block text-sm font-medium text-gray-700">Project Type</label>
+                                        <select id="project-type" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                            <option value="Web Development">Web Development</option>
+                                            <option value="Mobile App">Mobile App</option>
+                                            <option value="Network Setup">Network Setup</option>
+                                            <option value="Consulting">Consulting</option>
+                                            <option value="Maintenance">Maintenance</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="project-status" class="block text-sm font-medium text-gray-700">Project Status</label>
+                                        <select id="project-status" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                            <option value="In Progress">In Progress</option>
+                                            <option value="Quotation">Quotation</option>
+                                            <option value="On Hold">On Hold</option>
+                                            <option value="Completed">Completed</option>
+                                        </select>
+                                    </div>
+                                     <div>
+                                        <label for="project-deadline" class="block text-sm font-medium text-gray-700">Deadline</label>
+                                        <input type="date" id="project-deadline" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                    </div>
+                                    <div>
+                                        <label for="project-price" class="block text-sm font-medium text-gray-700">Total Price (Rs.)</label>
+                                        <input type="number" id="project-price" required min="0" step="0.01" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                    </div>
+                                    <div>
+                                        <label for="project-advance" class="block text-sm font-medium text-gray-700">Advance Payment (Rs.)</label>
+                                        <input type="number" id="project-advance" required min="0" step="0.01" value="0" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Due Payment (Rs.)</label>
+                                        <p id="project-due" class="mt-1 text-lg font-bold text-red-600">Rs. 0.00</p>
+                                    </div>
+                                    <div>
+                                        <label for="project-advance-slip" class="block text-sm font-medium text-gray-700">Advance Payment Slip</label>
+                                        <input type="file" id="project-advance-slip" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                                    </div>
+                                    <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center transition-all duration-200">
+                                        <span id="add-project-btn-text">Add Project</span>
+                                        <i id="add-project-spinner" data-lucide="loader-2" class="w-5 h-5 ml-2 animate-spin hidden"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Project List -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="text-lg font-semibold mb-4">Project List</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Client</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Due</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Deadline</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="project-list" class="bg-white divide-y divide-gray-200">
+                                            <!-- JS populated -->
+                                            <tr><td colspan="6" class="p-4 text-center text-gray-500">Loading projects...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tasks Page -->
+                <div id="page-tasks" class="page-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Add Task Form -->
+                        <div class="lg:col-span-1">
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="text-lg font-semibold mb-4">Add New Task</h3>
+                                <form id="add-task-form" class="space-y-4">
+                                    <div>
+                                        <label for="task-name" class="block text-sm font-medium text-gray-700">Task Description</label>
+                                        <input type="text" id="task-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                    </div>
+                                    <div>
+                                        <label for="task-project" class="block text-sm font-medium text-gray-700">Associated Project (Optional)</label>
+                                        <select id="task-project" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                            <!-- JS populated -->
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-all duration-200">
+                                        Add Task
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Task List -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="text-lg font-semibold mb-4">Pending Tasks</h3>
+                                <div id="task-list-pending" class="space-y-4 max-h-[40vh] overflow-y-auto mb-6">
+                                    <!-- JS populated -->
+                                </div>
+                                <h3 class="text-lg font-semibold mb-4 mt-6 border-t pt-4">Completed Tasks</h3>
+                                <div id="task-list-completed" class="space-y-4 max-h-[40vh] overflow-y-auto">
+                                    <!-- JS populated -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recurring Income Page -->
+                <div id="page-recurring" class="page-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Add Recurring Form -->
+                        <div class="lg:col-span-1">
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="text-lg font-semibold mb-4">Add Recurring Income</h3>
+                                <form id="add-recurring-form" class="space-y-4">
+                                    <div>
+                                        <label for="recurring-name" class="block text-sm font-medium text-gray-700">Service Name (e.g. Hosting)</label>
+                                        <input type="text" id="recurring-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                    </div>
+                                    <div>
+                                        <label for="recurring-client" class="block text-sm font-medium text-gray-700">Client</label>
+                                        <select id="recurring-client" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                            <!-- JS populated -->
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="recurring-amount" class="block text-sm font-medium text-gray-700">Amount (Rs.)</label>
+                                        <input type="number" id="recurring-amount" required min="0" step="0.01" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                    </div>
+                                    <div>
+                                        <label for="recurring-frequency" class="block text-sm font-medium text-gray-700">Frequency</label>
+                                        <select id="recurring-frequency" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                            <option value="Monthly">Monthly</option>
+                                            <option value="Yearly">Yearly</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="recurring-next-date" class="block text-sm font-medium text-gray-700">Next Due Date</label>
+                                        <input type="date" id="recurring-next-date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                                    </div>
+                                    <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-all duration-200">
+                                        Add Service
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Recurring List -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="text-lg font-semibold mb-4">Active Recurring Services</h3>
+                                <div id="recurring-list" class="space-y-4 max-h-[70vh] overflow-y-auto">
+                                    <!-- JS populated -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Income & Expenses Page -->
+                <div id="page-income-expenses" class="page-content hidden">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-3 sm:gap-0">
+                            <h3 class="text-lg font-semibold">Income & Expenses Report</h3>
+                            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+                                <button id="open-add-income-modal-btn" class="flex items-center justify-center w-full sm:w-auto bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-all duration-200">
+                                    <i data-lucide="plus" class="w-5 h-5 mr-2"></i> Add Income
+                                </button>
+                                <button id="open-add-expense-modal-btn" class="flex items-center justify-center w-full sm:w-auto bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-all duration-200">
+                                    <i data-lucide="minus" class="w-5 h-5 mr-2"></i> Add Expense
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Filters -->
+                        <div class="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+                            <div>
+                                <label for="filter-day" class="block text-sm font-medium text-gray-700">Date</label>
+                                <input type="date" id="filter-day" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label for="filter-month" class="block text-sm font-medium text-gray-700">Month</label>
+                                <input type="month" id="filter-month" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div>
+                                <label for="filter-year" class="block text-sm font-medium text-gray-700">Year</label>
+                                <input type="number" id="filter-year" placeholder="YYYY" min="2000" max="2100" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                            </div>
+                            <div class="flex items-end">
+                                <button id="filter-apply" class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-all duration-200">Apply Filter</button>
+                                <button id="filter-reset" class="ml-2 bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition-all duration-200">Reset</button>
+                            </div>
+                        </div>
+
+                        <!-- Summary Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="p-4 bg-green-100 rounded-lg">
+                                <p class="text-sm font-medium text-green-800">Total Income</p>
+                                <p id="report-total-income" class="text-2xl font-bold text-green-900">Rs. 0.00</p>
+                            </div>
+                            <div class="p-4 bg-red-100 rounded-lg">
+                                <p class="text-sm font-medium text-red-800">Total Expenses</p>
+                                <p id="report-total-expenses" class="text-2xl font-bold text-red-900">Rs. 0.00</p>
+                            </div>
+                            <div class="p-4 bg-blue-100 rounded-lg">
+                                <p class="text-sm font-medium text-blue-800">Net Profit</p>
+                                <p id="report-net-profit" class="text-2xl font-bold text-blue-900">Rs. 0.00</p>
+                            </div>
+                        </div>
+                         <div class="p-4 bg-yellow-100 rounded-lg mb-6">
+                            <p class="text-sm font-medium text-yellow-800">Profit from Previous Periods</p>
+                            <p id="report-previous-profit" class="text-2xl font-bold text-yellow-900">Rs. 0.00</p>
+                        </div>
+
+                        <!-- Transactions Table -->
+                        <h4 class="text-md font-semibold mb-4">Filtered Transactions</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Date</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Type</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slip</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactions-list" class="bg-white divide-y divide-gray-200">
+                                    <!-- JS populated -->
+                                    <tr><td colspan="5" class="p-4 text-center text-gray-500">Loading transactions...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other Income Page (REMOVED) -->
+
+                <!-- Manual Transactions (Expenses) Page (REMOVED) -->
+
+                <!-- Next Plans Page -->
+                <div id="page-next-plans" class="page-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Add Plan Form -->
+                        <div class="lg:col-span-1">
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="text-lg font-semibold mb-4">Add New Plan</h3>
+                                <form id="add-plan-form" class="space-y-4">
+                                    <div>
+                                        <label for="plan-note" class="block text-sm font-medium text-gray-700">Plan Note</label>
+                                        <textarea id="plan-note" rows="4" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"></textarea>
+                                    </div>
+                                    <div>
+                                        <label for="plan-image" class="block text-sm font-medium text-gray-700">Upload Screenshot (Optional)</label>
+                                        <input type="file" id="plan-image" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                                    </div>
+                                    <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center transition-all duration-200">
+                                        <span id="add-plan-btn-text">Add Plan</span>
+                                        <i id="add-plan-spinner" data-lucide="loader-2" class="w-5 h-5 ml-2 animate-spin hidden"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Plans List -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="text-lg font-semibold mb-4">Saved Plans</h3>
+                                <div id="plans-list" class="space-y-4 max-h-[70vh] overflow-y-auto">
+                                    <!-- JS populated -->
+                                    <p class="text-center text-gray-500">Loading plans...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </main>
+        </div>
+    </div>
+
+    <!-- NEW: Mobile Bottom Navigation Bar -->
+    <nav id="mobile-nav" class="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex items-center justify-around z-40">
+        <a href="#dashboard" class="sidebar-link flex flex-col items-center justify-center text-gray-600 w-full h-full text-green-600" data-page="dashboard">
+            <i data-lucide="layout-dashboard" class="w-6 h-6"></i>
+            <span class="text-xs mt-1">Dashboard</span>
+        </a>
+        <a href="#clients" class="sidebar-link flex flex-col items-center justify-center text-gray-600 w-full h-full" data-page="clients">
+            <i data-lucide="users" class="w-6 h-6"></i>
+            <span class="text-xs mt-1">Clients</span>
+        </a>
+        <a href="#projects" class="sidebar-link flex flex-col items-center justify-center text-gray-600 w-full h-full" data-page="projects">
+            <i data-lucide="package" class="w-6 h-6"></i>
+            <span class="text-xs mt-1">Projects</span>
+        </a>
+        <a href="#tasks" class="sidebar-link flex flex-col items-center justify-center text-gray-600 w-full h-full" data-page="tasks">
+            <i data-lucide="check-square" class="w-6 h-6"></i>
+            <span class="text-xs mt-1">Tasks</span>
+        </a>
+        <a href="#income-expenses" class="sidebar-link flex flex-col items-center justify-center text-gray-600 w-full h-full" data-page="income-expenses">
+            <i data-lucide="scale" class="w-6 h-6"></i>
+            <span class="text-xs mt-1">Income</span>
+        </a>
+    </nav>
+
+    <!-- Add Income Modal -->
+    <div id="add-income-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 class="text-lg font-semibold mb-4">Add Other Income</h3>
+            <form id="add-other-income-form" class="space-y-4">
+                <div>
+                    <label for="other-income-desc" class="block text-sm font-medium text-gray-700">Description</label>
+                    <input type="text" id="other-income-desc" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                </div>
+                <div>
+                    <label for="other-income-amount" class="block text-sm font-medium text-gray-700">Amount (Rs.)</label>
+                    <input type="number" id="other-income-amount" required min="0" step="0.01" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                </div>
+                <div>
+                    <label for="other-income-slip" class="block text-sm font-medium text-gray-700">Upload Slip (Optional)</label>
+                    <input type="file" id="other-income-slip" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" id="cancel-add-income" class="bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400 transition-all duration-200">Cancel</button>
+                    <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center transition-all duration-200">
+                        <span id="add-income-btn-text">Add Income</span>
+                        <i id="add-income-spinner" data-lucide="loader-2" class="w-5 h-5 ml-2 animate-spin hidden"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Expense Modal -->
+    <div id="add-expense-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 class="text-lg font-semibold mb-4">Add Manual Transaction (Expense)</h3>
+            <form id="add-expense-form" class="space-y-4">
+                <div>
+                    <label for="expense-desc" class="block text-sm font-medium text-gray-700">Description</label>
+                    <input type="text" id="expense-desc" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                </div>
+                <div>
+                    <label for="expense-amount" class="block text-sm font-medium text-gray-700">Amount (Rs.)</label>
+                    <input type="number" id="expense-amount" required min="0" step="0.01" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500">
+                </div>
+                <div>
+                    <label for="expense-slip" class="block text-sm font-medium text-gray-700">Upload Slip (Optional)</label>
+                    <input type="file" id="expense-slip" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" id="cancel-add-expense" class="bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400 transition-all duration-200">Cancel</button>
+                    <button type="submit" class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors flex items-center justify-center transition-all duration-200">
+                        <span id="add-expense-btn-text">Add Expense</span>
+                        <i id="add-expense-spinner" data-lucide="loader-2" class="w-5 h-5 ml-2 animate-spin hidden"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Complete Project Modal -->
+    <div id="complete-project-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 class="text-lg font-semibold mb-4">Complete Project</h3>
+            <form id="complete-project-form">
+                <input type="hidden" id="complete-project-id">
+                <p class="mb-4">Please upload the final completion slip to mark this project as complete.</p>
+                <div>
+                    <label for="completion-slip" class="block text-sm font-medium text-gray-700">Completion Slip</label>
+                    <input type="file" id="completion-slip" accept="image/*" required class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" id="cancel-complete-project" class="bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400">Cancel</button>
+                    <button type="submit" class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 flex items-center">
+                        <span id="complete-project-btn-text">Complete Project</span>
+                        <i id="complete-project-spinner" data-lucide="loader-2" class="w-5 h-5 ml-2 animate-spin hidden"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast">
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[200]">
+        <div class="flex flex-col items-center">
+            <i data-lucide="loader-2" class="w-16 h-16 text-white animate-spin"></i>
+            <span class="text-white text-lg mt-4">Loading IT Panel...</span>
+        </div>
+    </div>
+
+    <!-- Lucide Icons CDN (FIXED) - Moved to end of body, before module script -->
+    <!-- FIX: Added 'defer' to ensure it loads before the module script but after HTML parsing -->
+    <script src="https://unpkg.com/lucide@latest/dist/lucide.min.js" defer></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Firebase Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInAnonymously, 
+            signInWithCustomToken, 
+            onAuthStateChanged,
+            signInWithEmailAndPassword,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            getDoc, 
+            addDoc, 
+            setDoc, 
+            updateDoc, 
+            deleteDoc, 
+            onSnapshot, 
+            collection, 
+            query, 
+            where, 
+            getDocs,
+            serverTimestamp,
+            Timestamp
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { 
+            getStorage 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+
+        // === GLOBAL VARIABLES ===
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config)
+            : {
+                apiKey: "AIzaSyCJGW3-flCwC5y8WXJCJWDvx36eEkw_I5o",
+                authDomain: "pixora-872e3.firebaseapp.com",
+                projectId: "pixora-872e3",
+                storageBucket: "pixora-872e3.firebasestorage.app",
+                messagingSenderId: "315709334461",
+                appId: "1:315709334461:web:a758b041e43837df6d68d4",
+                measurementId: "G-C7J0ZGKR1M"
+            };
+
+        const IMG_API_KEY = "6e01e547d8bad62ffd422d0cc7851ac3";
+        const IMG_API_URL = `https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`;
+
+        let app;
+        let auth;
+        let db;
+        let userId = null;
+        let appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        let clientsCollection, projectsCollection, transactionsCollection, plansCollection, quotationsCollection, tasksCollection, recurringCollection;
+        let clientUnsubscribe, projectsUnsubscribe, transactionsUnsubscribe, plansUnsubscribe, quotationsUnsubscribe, tasksUnsubscribe, recurringUnsubscribe;
+
+        let incomeExpenseChart, projectStatusChart;
+        let allTransactions = []; // Store all transactions for filtering
+        let allProjects = []; // Store all projects for dropdowns
+        let allClients = []; // Store all clients for dropdowns
+
+        // === DOM ELEMENTS ===
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const userStatus = document.getElementById('user-status');
+        const pageTitle = document.getElementById('page-title');
+        const loginOverlay = document.getElementById('login-overlay');
+        const mainApp = document.getElementById('main-app');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const signOutBtn = document.getElementById('sign-out-btn');
+
+        // Responsive Sidebar
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        
+        // Forms
+        const addClientForm = document.getElementById('add-client-form');
+        const addProjectForm = document.getElementById('add-project-form');
+        const addQuotationForm = document.getElementById('add-quotation-form');
+        const addTaskForm = document.getElementById('add-task-form');
+        const addRecurringForm = document.getElementById('add-recurring-form');
+        const addOtherIncomeForm = document.getElementById('add-other-income-form'); // Still valid (in modal)
+        const addExpenseForm = document.getElementById('add-expense-form'); // Still valid (in modal)
+        const completeProjectForm = document.getElementById('complete-project-form');
+        const addPlanForm = document.getElementById('add-plan-form');
+
+        // Lists
+        const clientList = document.getElementById('client-list');
+        const projectClientSelect = document.getElementById('project-client');
+        const quotationClientSelect = document.getElementById('quotation-client');
+        const recurringClientSelect = document.getElementById('recurring-client');
+        const taskProjectSelect = document.getElementById('task-project');
+        const projectList = document.getElementById('project-list');
+        const quotationList = document.getElementById('quotation-list');
+        const taskListPending = document.getElementById('task-list-pending');
+        const taskListCompleted = document.getElementById('task-list-completed');
+        const recurringList = document.getElementById('recurring-list');
+        const transactionsList = document.getElementById('transactions-list');
+        const plansList = document.getElementById('plans-list');
+        const dashboardRenewalsList = document.getElementById('dashboard-renewals-list');
+        const dashboardTasksList = document.getElementById('dashboard-tasks-list');
+
+        // Modals
+        const completeProjectModal = document.getElementById('complete-project-modal');
+        const cancelCompleteProjectBtn = document.getElementById('cancel-complete-project');
+        const addIncomeModal = document.getElementById('add-income-modal');
+        const addExpenseModal = document.getElementById('add-expense-modal');
+        const openAddIncomeBtn = document.getElementById('open-add-income-modal-btn');
+        const openAddExpenseBtn = document.getElementById('open-add-expense-modal-btn');
+        const cancelAddIncomeBtn = document.getElementById('cancel-add-income');
+        const cancelAddExpenseBtn = document.getElementById('cancel-add-expense');
+
+        // Project Form Elements
+        const projectPriceInput = document.getElementById('project-price');
+        const projectAdvanceInput = document.getElementById('project-advance');
+        const projectDueText = document.getElementById('project-due');
+
+        // Dashboard
+        const quickAddIncomeBtn = document.getElementById('quick-add-income');
+
+        // Client Profile Page
+        const clientProfilePage = document.getElementById('page-client-profile');
+        const backToClientsBtn = document.getElementById('back-to-clients-btn');
+        const profileClientName = document.getElementById('profile-client-name');
+        const profileClientPhone = document.getElementById('profile-client-phone');
+        const profileClientEmail = document.getElementById('profile-client-email');
+        const profileTotalProjects = document.getElementById('profile-total-projects');
+        const profileTotalBilled = document.getElementById('profile-total-billed');
+        const profileTotalDue = document.getElementById('profile-total-due');
+        const profileProjectsList = document.getElementById('profile-projects-list');
+
+        // Report Elements
+        const filterDay = document.getElementById('filter-day');
+        const filterMonth = document.getElementById('filter-month');
+        const filterYear = document.getElementById('filter-year');
+        const filterApplyBtn = document.getElementById('filter-apply');
+        const filterResetBtn = document.getElementById('filter-reset');
+        const reportTotalIncome = document.getElementById('report-total-income');
+        const reportTotalExpenses = document.getElementById('report-total-expenses');
+        const reportNetProfit = document.getElementById('report-net-profit');
+        const reportPreviousProfit = document.getElementById('report-previous-profit');
+
+
+        // === HELPER FUNCTIONS ===
+
+        // Lucide Icons
+        function initIcons() {
+            // FIX: Removed the recursive setTimeout loop that was spamming the console.
+            // We will now only call this *after* auth is confirmed.
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            } else {
+                console.warn("Lucide library not loaded. Icons will be missing.");
+            }
+        }
+
+        // Toast Notification
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            if (isError) {
+                toast.classList.add('error');
+            } else {
+                toast.classList.remove('error');
+            }
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Format Currency
+        function formatCurrency(amount) {
+            return `Rs. ${parseFloat(amount).toFixed(2)}`;
+        }
+
+        // Format Date
+        function formatDate(timestamp) {
+            if (!timestamp) return 'N/A';
+            if (typeof timestamp.toDate === 'function') {
+                return timestamp.toDate().toLocaleDateString('si-LK');
+            }
+            // Handle string dates (from date picker)
+            try {
+                return new Date(timestamp).toLocaleDateString('si-LK');
+            } catch (e) {
+                return 'Invalid Date';
+            }
+        }
+        
+        function formatInputDate(timestamp) {
+            if (!timestamp) return '';
+            const date = timestamp.toDate();
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        // Show/Hide Spinner
+        function toggleSpinner(btnTextEl, spinnerEl, show) {
+            if (show) {
+                btnTextEl.classList.add('hidden');
+                spinnerEl.classList.remove('hidden');
+                spinnerEl.parentElement.disabled = true;
+            } else {
+                btnTextEl.classList.remove('hidden');
+                spinnerEl.classList.add('hidden');
+                spinnerEl.parentElement.disabled = false;
+            }
+        }
+
+        // Image Upload
+        async function uploadImage(file) {
+            if (!file) return null;
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch(IMG_API_URL, {
+                    method: 'POST',
+                    body: formData,
+                });
+                const result = await response.json();
+                if (result.success) {
+                    return result.data.url;
+                } else {
+                    console.error('ImgBB Error:', result);
+                    throw new Error(result.error?.message || 'Image upload failed');
+                }
+            } catch (error) {
+                console.error('Image Upload Error:', error);
+                showToast(`Image Upload Error: ${error.message}`, true);
+                return null;
+            }
+        }
+
+        // === FIREBASE FUNCTIONS ===
+
+        async function initializeFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                
+                // Auth State Change
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        console.log('User is signed in:', user.uid);
+                        userId = user.uid;
+                        userStatus.textContent = `${user.email}`;
+                        userStatus.classList.replace('text-gray-600', 'text-green-600');
+
+                        // Define collection references
+                        const privateDataPath = `artifacts/${appId}/users/${userId}`;
+                        clientsCollection = collection(db, `${privateDataPath}/clients`);
+                        projectsCollection = collection(db, `${privateDataPath}/projects`);
+                        transactionsCollection = collection(db, `${privateDataPath}/transactions`);
+                        plansCollection = collection(db, `${privateDataPath}/plans`);
+                        quotationsCollection = collection(db, `${privateDataPath}/quotations`);
+                        tasksCollection = collection(db, `${privateDataPath}/tasks`);
+                        recurringCollection = collection(db, `${privateDataPath}/recurring`);
+
+                        // Attach listeners
+                        attachAllListeners();
+
+                        // Hide login, show app
+                        loginOverlay.classList.add('hidden');
+                        mainApp.classList.remove('hidden');
+                        mainApp.classList.add('flex'); // Add flex back
+                        loadingOverlay.style.display = 'none';
+                        
+                        // FIX: Added a small delay to ensure the DOM is fully ready and visible
+                        // before lucide tries to find and replace icons.
+                        setTimeout(initIcons, 50); 
+
+                    } else {
+                        console.log('User is signed out.');
+                        userId = null;
+                        userStatus.textContent = 'Signed Out';
+                        userStatus.classList.replace('text-green-600', 'text-gray-600');
+                        
+                        // Detach listeners
+                        if (clientUnsubscribe) clientUnsubscribe();
+                        if (projectsUnsubscribe) projectsUnsubscribe();
+                        if (transactionsUnsubscribe) transactionsUnsubscribe();
+                        if (plansUnsubscribe) plansUnsubscribe();
+                        if (quotationsUnsubscribe) quotationsUnsubscribe();
+                        if (tasksUnsubscribe) tasksUnsubscribe();
+                        if (recurringUnsubscribe) recurringUnsubscribe();
+
+                        // Show login, hide app
+                        loginOverlay.classList.remove('hidden');
+                        mainApp.classList.add('hidden');
+                        mainApp.classList.remove('flex');
+                        loadingOverlay.style.display = 'none';
+                        loginError.textContent = '';
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase Init Error: ", error);
+                loadingOverlay.innerHTML = `<span class="text-white text-lg">Error loading app. Please refresh.</span>`;
+            }
+        }
+
+        // === DATA LISTENERS ===
+
+        function attachAllListeners() {
+            // Detach old listeners
+            if (clientUnsubscribe) clientUnsubscribe();
+            if (projectsUnsubscribe) projectsUnsubscribe();
+            if (transactionsUnsubscribe) transactionsUnsubscribe();
+            if (plansUnsubscribe) plansUnsubscribe();
+            if (quotationsUnsubscribe) quotationsUnsubscribe();
+            if (tasksUnsubscribe) tasksUnsubscribe();
+            if (recurringUnsubscribe) recurringUnsubscribe();
+
+            // Client Listener
+            clientUnsubscribe = onSnapshot(clientsCollection, (snapshot) => {
+                allClients = [];
+                snapshot.forEach(doc => {
+                    allClients.push({ id: doc.id, ...doc.data() });
+                });
+                renderClientList(allClients);
+                populateClientDropdowns(allClients);
+                updateDashboardStats(); // Update client count
+            }, (error) => console.error("Client listener error:", error));
+
+            // Project Listener
+            projectsUnsubscribe = onSnapshot(projectsCollection, (snapshot) => {
+                allProjects = [];
+                snapshot.forEach(doc => {
+                    allProjects.push({ id: doc.id, ...doc.data() });
+                });
+                renderProjectList(allProjects);
+                populateProjectDropdown(allProjects);
+                updateDashboardStats(); // Update project stats
+            }, (error) => console.error("Project listener error:", error));
+
+            // Transaction Listener
+            transactionsUnsubscribe = onSnapshot(transactionsCollection, (snapshot) => {
+                allTransactions = [];
+                snapshot.forEach(doc => {
+                    allTransactions.push({ id: doc.id, ...doc.data() });
+                });
+                allTransactions.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+                renderFilteredTransactions();
+                updateDashboardStats();
+            }, (error) => console.error("Transaction listener error:", error));
+            
+            // Quotation Listener
+            quotationsUnsubscribe = onSnapshot(quotationsCollection, (snapshot) => {
+                const quotations = [];
+                snapshot.forEach(doc => {
+                    quotations.push({ id: doc.id, ...doc.data() });
+                });
+                quotations.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+                renderQuotationList(quotations);
+            }, (error) => console.error("Quotation listener error:", error));
+            
+            // Task Listener
+            tasksUnsubscribe = onSnapshot(tasksCollection, (snapshot) => {
+                const tasks = [];
+                snapshot.forEach(doc => {
+                    tasks.push({ id: doc.id, ...doc.data() });
+                });
+                tasks.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+                renderTaskList(tasks);
+                updateDashboardStats(); // Update pending tasks
+            }, (error) => console.error("Task listener error:", error));
+            
+            // Recurring Income Listener
+            recurringUnsubscribe = onSnapshot(recurringCollection, (snapshot) => {
+                const recurring = [];
+                snapshot.forEach(doc => {
+                    recurring.push({ id: doc.id, ...doc.data() });
+                });
+                recurring.sort((a, b) => a.nextDueDate.toMillis() - b.nextDueDate.toMillis());
+                renderRecurringList(recurring);
+                updateDashboardStats(); // Update renewals
+            }, (error) => console.error("Recurring listener error:", error));
+
+            // Plans Listener
+            plansUnsubscribe = onSnapshot(plansCollection, (snapshot) => {
+                const plans = [];
+                snapshot.forEach(doc => {
+                    plans.push({ id: doc.id, ...doc.data() });
+                });
+                plans.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis());
+                renderPlans(plans);
+            }, (error) => console.error("Plans listener error:", error));
+        }
+
+
+        // === RENDER FUNCTIONS ===
+
+        // Render Client List
+        function renderClientList(clients) {
+            if (clients.length === 0) {
+                clientList.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">No clients found. Add one!</td></tr>';
+                return;
+            }
+            clientList.innerHTML = clients.map(client => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">${client.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">${client.number}</td>
+                    <td class="px-6 py-4 whitespace-nowrap hidden md:table-cell">${client.email || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap space-x-2">
+                        <button class="text-green-600 hover:text-green-800" data-id="${client.id}" onclick="window.viewClientProfile('${client.id}')">
+                            <i data-lucide="eye" class="w-5 h-5"></i>
+                        </button>
+                        <button class="text-red-600 hover:text-red-800" data-id="${client.id}" onclick="window.deleteClient('${client.id}')">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            initIcons();
+        }
+
+        // Populate Client Dropdowns
+        function populateClientDropdowns(clients) {
+            const options = clients.map(client => `
+                <option value="${client.id}" data-name="${client.name}">${client.name} (${client.number})</option>
+            `).join('');
+            
+            const fullOptions = `<option value="">Select Client</option>${options}`;
+            projectClientSelect.innerHTML = fullOptions;
+            quotationClientSelect.innerHTML = fullOptions;
+            recurringClientSelect.innerHTML = fullOptions;
+        }
+        
+        // Populate Project Dropdown (for Tasks)
+        function populateProjectDropdown(projects) {
+            const options = projects
+                .filter(p => p.status !== 'Completed')
+                .map(proj => `
+                <option value="${proj.id}" data-name="${proj.projectName}">${proj.projectName} (${proj.clientName})</option>
+            `).join('');
+            
+            taskProjectSelect.innerHTML = `<option value="">No Associated Project</option>${options}`;
+        }
+
+        // Render Project List
+        function renderProjectList(projects) {
+             if (projects.length === 0) {
+                projectList.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">No projects found.</td></tr>';
+                return;
+            }
+            
+            const statusColors = {
+                'In Progress': 'bg-blue-100 text-blue-800',
+                'Quotation': 'bg-gray-100 text-gray-800',
+                'On Hold': 'bg-yellow-100 text-yellow-800',
+                'Completed': 'bg-green-100 text-green-800',
+            };
+            
+            projectList.innerHTML = projects.map(proj => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="font-medium">${proj.projectName}</div>
+                        <div class="text-sm text-gray-500">${proj.projectType}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap hidden md:table-cell">${proj.clientName || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap font-medium ${proj.duePayment > 0 ? 'text-red-600' : 'text-green-600'} hidden sm:table-cell">
+                        ${formatCurrency(proj.duePayment)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[proj.status] || 'bg-gray-100 text-gray-800'}">
+                            ${proj.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap hidden lg:table-cell">${proj.deadline ? formatDate(proj.deadline) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${proj.status !== 'Completed' ? `
+                            <button class="bg-green-600 text-white py-1 px-3 rounded-md text-sm hover:bg-green-700" data-id="${proj.id}" onclick="window.openCompleteProjectModal('${proj.id}')">
+                                Complete
+                            </button>
+                        ` : `
+                            <a href="${proj.completionSlipUrl || '#'}" target="_blank" class="text-blue-600 hover:underline ${!proj.completionSlipUrl ? 'opacity-50 pointer-events-none' : ''}">View Slip</a>
+                        `}
+                    </td>
+                </tr>
+            `).join('');
+            initIcons();
+        }
+        
+        // Render Quotation List
+        function renderQuotationList(quotations) {
+            if (quotations.length === 0) {
+                quotationList.innerHTML = '<p class="text-center text-gray-500">No pending quotations.</p>';
+                return;
+            }
+            quotationList.innerHTML = quotations.map(q => {
+                const client = allClients.find(c => c.id === q.clientId);
+                return `
+                <div class="border rounded-lg p-4 shadow-sm bg-white flex justify-between items-center">
+                    <div>
+                        <p class="font-semibold text-gray-800">${q.projectName}</p>
+                        <p class="text-sm text-gray-600">${client ? client.name : 'Unknown Client'}</p>
+                        <p class="text-lg font-bold text-green-700">${formatCurrency(q.amount)}</p>
+                        <p class="text-xs text-gray-400 mt-1">Created: ${formatDate(q.createdAt)}</p>
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <button class="bg-green-600 text-white py-1 px-3 rounded-md text-sm hover:bg-green-700" onclick="window.convertQuotation('${q.id}')">
+                            Convert to Project
+                        </button>
+                        <button class="text-red-600 hover:text-red-800 text-sm flex items-center justify-center" onclick="window.deleteQuotation('${q.id}')">
+                            <i data-lucide="trash-2" class="w-4 h-4 mr-1"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `}).join('');
+            initIcons();
+        }
+        
+        // Render Task List
+        function renderTaskList(tasks) {
+            const pendingTasks = tasks.filter(t => t.status === 'Pending');
+            const completedTasks = tasks.filter(t => t.status === 'Completed');
+            
+            if (pendingTasks.length === 0) {
+                taskListPending.innerHTML = '<p class="text-center text-gray-500">No pending tasks.</p>';
+            } else {
+                taskListPending.innerHTML = pendingTasks.map(t => renderTaskItem(t)).join('');
+            }
+            
+            if (completedTasks.length === 0) {
+                taskListCompleted.innerHTML = '<p class="text-center text-gray-500">No completed tasks.</p>';
+            } else {
+                taskListCompleted.innerHTML = completedTasks.map(t => renderTaskItem(t)).join('');
+            }
+            initIcons();
+        }
+        
+        function renderTaskItem(task) {
+            const project = allProjects.find(p => p.id === task.projectId);
+            const priorityColors = {
+                'High': 'border-red-500',
+                'Medium': 'border-yellow-500',
+                'Low': 'border-gray-300'
+            };
+            return `
+            <div class="border-l-4 ${priorityColors[task.priority]} rounded-r-lg p-3 shadow-sm bg-white flex items-center justify-between">
+                <div class="flex items-center">
+                    <input type="checkbox" class="w-5 h-5 text-green-600 rounded mr-3" 
+                           onchange="window.toggleTaskStatus('${task.id}', '${task.status}')" 
+                           ${task.status === 'Completed' ? 'checked' : ''}>
+                    <div>
+                        <p class="text-gray-800 ${task.status === 'Completed' ? 'line-through text-gray-500' : ''}">${task.name}</p>
+                        ${project ? `<p class="text-xs text-blue-600">${project.projectName}</p>` : ''}
+                        <p class="text-xs text-gray-400">Priority: ${task.priority}</p>
+                    </div>
+                </div>
+                <button class="text-red-600 hover:text-red-800" onclick="window.deleteTask('${task.id}')">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </div>
+            `;
+        }
+        
+        // Render Recurring List
+        function renderRecurringList(recurring) {
+            if (recurring.length === 0) {
+                recurringList.innerHTML = '<p class="text-center text-gray-500">No recurring services added.</p>';
+                return;
+            }
+            const now = new Date();
+            recurringList.innerHTML = recurring.map(r => {
+                const client = allClients.find(c => c.id === r.clientId);
+                const dueDate = r.nextDueDate.toDate();
+                const isOverdue = dueDate < now;
+                return `
+                <div class="border rounded-lg p-4 shadow-sm bg-white">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-semibold text-gray-800">${r.serviceName}</p>
+                            <p class="text-sm text-gray-600">${client ? client.name : 'Unknown Client'}</p>
+                            <p class="text-lg font-bold text-green-700">${formatCurrency(r.amount)} <span class="text-sm font-normal text-gray-500">/ ${r.frequency}</span></p>
+                        </div>
+                        <button class="text-red-600 hover:text-red-800" onclick="window.deleteRecurring('${r.id}')">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <div class="mt-4 pt-4 border-t flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-medium ${isOverdue ? 'text-red-600' : 'text-gray-600'}">
+                                Next Due: ${formatDate(r.nextDueDate)}
+                                ${isOverdue ? '<span class="font-bold">(Overdue)</span>' : ''}
+                            </p>
+                        </div>
+                        <button class="bg-green-600 text-white py-1 px-3 rounded-md text-sm hover:bg-green-700" 
+                                onclick="window.markRenewalPaid('${r.id}', ${r.amount}, '${r.frequency}', '${r.serviceName} (${client ? client.name : ''})')">
+                            Mark as Paid
+                        </button>
+                    </div>
+                </div>
+            `}).join('');
+            initIcons();
+        }
+
+        // Render Filtered Transactions
+        function renderFilteredTransactions() {
+            const day = filterDay.value;
+            const month = filterMonth.value;
+            const year = filterYear.value;
+
+            let filterStartDate, filterEndDate;
+            let previousProfitEndDate;
+
+            if (day) {
+                filterStartDate = new Date(day);
+                filterStartDate.setHours(0, 0, 0, 0);
+                filterEndDate = new Date(day);
+                filterEndDate.setHours(23, 59, 59, 999);
+                previousProfitEndDate = new Date(filterStartDate.getTime() - 1);
+            } else if (month) {
+                const [y, m] = month.split('-');
+                filterStartDate = new Date(y, m - 1, 1);
+                filterEndDate = new Date(y, m, 0);
+                filterEndDate.setHours(23, 59, 59, 999);
+                previousProfitEndDate = new Date(filterStartDate.getTime() - 1);
+            } else if (year) {
+                filterStartDate = new Date(year, 0, 1);
+                filterEndDate = new Date(year, 11, 31);
+                filterEndDate.setHours(23, 59, 59, 999);
+                previousProfitEndDate = new Date(filterStartDate.getTime() - 1);
+            } else {
+                filterStartDate = new Date(0); 
+                filterEndDate = new Date(8640000000000000); 
+                previousProfitEndDate = new Date(0);
+            }
+
+            const filtered = [];
+            let totalIncome = 0;
+            let totalExpenses = 0;
+            let previousProfit = 0;
+
+            for (const trans of allTransactions) {
+                if (!trans.createdAt) continue; // Skip bad data
+                const transDate = trans.createdAt.toDate();
+                
+                // Calculate previous profit
+                if (transDate <= previousProfitEndDate) {
+                    if (trans.type === 'Project Income' || trans.type === 'Other Income' || trans.type === 'Recurring Income') {
+                        previousProfit += trans.amount;
+                    } else if (trans.type === 'Expense') {
+                        previousProfit -= trans.amount;
+                    }
+                }
+                
+                // Filter for current period
+                if (transDate >= filterStartDate && transDate <= filterEndDate) {
+                    filtered.push(trans);
+                    if (trans.type === 'Project Income' || trans.type === 'Other Income' || trans.type === 'Recurring Income') {
+                        totalIncome += trans.amount;
+                    } else if (trans.type === 'Expense') {
+                        totalExpenses -= trans.amount;
+                    }
+                }
+            }
+
+            if (filtered.length === 0) {
+                transactionsList.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">No transactions found for this period.</td></tr>';
+            } else {
+                transactionsList.innerHTML = filtered.map(trans => `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">${formatDate(trans.createdAt)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${trans.description}</td>
+                        <td class="px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                            <span class="${trans.type === 'Expense' ? 'text-red-600' : 'text-green-600'}">
+                                ${trans.type}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium ${trans.type === 'Expense' ? 'text-red-600' : 'text-green-600'}">
+                            ${trans.type === 'Expense' ? '-' : '+'} ${formatCurrency(trans.amount)}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            ${trans.slipUrl ? `<a href="${trans.slipUrl}" target="_blank" class="text-blue-600 hover:underline">View Slip</a>` : 'N/A'}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            reportTotalIncome.textContent = formatCurrency(totalIncome);
+            reportTotalExpenses.textContent = formatCurrency(totalExpenses);
+            reportNetProfit.textContent = formatCurrency(totalIncome - totalExpenses);
+            reportPreviousProfit.textContent = formatCurrency(previousProfit);
+        }
+
+        // Render Plans List
+        function renderPlans(plans) {
+            if (plans.length === 0) {
+                plansList.innerHTML = '<p class="text-center text-gray-500">No plans added yet.</p>';
+                return;
+            }
+            plansList.innerHTML = plans.map(plan => `
+                <div class="border rounded-lg p-4 shadow-sm bg-white">
+                    <p class="text-gray-700 whitespace-pre-wrap mb-4">${plan.note}</p>
+                    ${plan.imageUrl ? `
+                        <a href="${plan.imageUrl}" target="_blank">
+                            <img src="${plan.imageUrl}" alt="Plan Screenshot" class="rounded-md w-full max-w-xs object-cover cursor-pointer">
+                        </a>
+                    ` : ''}
+                    <div class="text-xs text-gray-400 mt-3 flex justify-between items-center">
+                        <span>${formatDate(plan.createdAt)}</span>
+                        <button class="text-red-600 hover:text-red-800" data-id="${plan.id}" onclick="window.deletePlan('${plan.id}')">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            initIcons();
+        }
+
+
+        // === DASHBOARD STATS & CHARTS ===
+        
+        async function updateDashboardStats() {
+            if (!allTransactions || !allProjects || !allClients) return;
+
+            // Client Count
+            document.getElementById('stat-total-clients').textContent = allClients.length;
+
+            // Project Counts
+            let activeProjects = 0;
+            const statusCounts = {};
+            allProjects.forEach(proj => {
+                if (proj.status === 'In Progress') activeProjects++;
+                statusCounts[proj.status] = (statusCounts[proj.status] || 0) + 1;
+            });
+            document.getElementById('stat-active-projects').textContent = activeProjects;
+            updateProjectStatusChart(statusCounts);
+
+            // Task Count
+            const snapshotTasks = await getDocs(query(tasksCollection, where('status', '==', 'Pending')));
+            document.getElementById('stat-pending-tasks').textContent = snapshotTasks.size;
+            renderDashboardTaskList(snapshotTasks.docs.map(d => ({id: d.id, ...d.data()})));
+
+            // This Month's Income/Expense & All-Time Profit
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            
+            let monthIncome = 0;
+            let monthExpenses = 0;
+            const dailyIncome = new Array(endOfMonth.getDate()).fill(0);
+            const dailyExpenses = new Array(endOfMonth.getDate()).fill(0);
+            let allTimeNetProfit = 0;
+
+            allTransactions.forEach(trans => {
+                if (!trans.createdAt) return;
+                const transDate = trans.createdAt.toDate();
+
+                // All-Time Profit
+                if (trans.type === 'Project Income' || trans.type === 'Other Income' || trans.type === 'Recurring Income') {
+                    allTimeNetProfit += trans.amount;
+                } else if (trans.type === 'Expense') {
+                    allTimeNetProfit -= trans.amount;
+                }
+
+                // This Month
+                if (transDate >= startOfMonth && transDate <= endOfMonth) {
+                    const day = transDate.getDate() - 1; // 0-indexed
+                    if (trans.type === 'Project Income' || trans.type === 'Other Income' || trans.type === 'Recurring Income') {
+                        monthIncome += trans.amount;
+                        dailyIncome[day] += trans.amount;
+                    } else if (trans.type === 'Expense') {
+                        monthExpenses += trans.amount;
+                        dailyExpenses[day] += trans.amount;
+                    }
+                }
+            });
+            
+            document.getElementById('stat-account-balance').textContent = formatCurrency(allTimeNetProfit);
+            updateIncomeExpenseChart(dailyIncome, dailyExpenses, endOfMonth.getDate());
+            
+            // Upcoming Renewals
+            const today = Timestamp.now();
+            const thirtyDaysFromNow = new Date(today.toDate().getTime() + 30 * 24 * 60 * 60 * 1000);
+            const snapshotRenewals = await getDocs(query(recurringCollection, where('nextDueDate', '<=', Timestamp.fromDate(thirtyDaysFromNow))));
+            
+            const upcoming = snapshotRenewals.docs
+                .map(d => ({id: d.id, ...d.data()}))
+                .filter(r => r.nextDueDate.toDate() >= today.toDate()) // Filter out overdue
+                .sort((a, b) => a.nextDueDate.toMillis() - b.nextDueDate.toMillis());
+                
+            renderDashboardRenewalsList(upcoming);
+        }
+        
+        function renderDashboardTaskList(tasks) {
+            if(tasks.length === 0) {
+                dashboardTasksList.innerHTML = '<p class="text-gray-500 text-center">No pending tasks.</p>';
+                return;
+            }
+            dashboardTasksList.innerHTML = tasks.slice(0, 5).map(task => { // Show top 5
+                const project = allProjects.find(p => p.id === task.projectId);
+                return `
+                <div class="border-b pb-2">
+                    <p class="text-gray-800">${task.name}</p>
+                    ${project ? `<p class="text-xs text-blue-600">${project.projectName}</p>` : ''}
+                </div>
+                `;
+            }).join('');
+        }
+        
+        function renderDashboardRenewalsList(renewals) {
+            if(renewals.length === 0) {
+                dashboardRenewalsList.innerHTML = '<p class="text-gray-500 text-center">No upcoming renewals.</p>';
+                return;
+            }
+            dashboardRenewalsList.innerHTML = renewals.map(r => {
+                const client = allClients.find(c => c.id === r.clientId);
+                return `
+                <div class="border-b pb-2 flex justify-between items-center">
+                    <div>
+                        <p class="text-gray-800">${r.serviceName}</p>
+                        <p class="text-xs text-gray-500">${client ? client.name : ''}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-semibold text-green-700">${formatCurrency(r.amount)}</p>
+                        <p class="text-xs text-red-600">${formatDate(r.nextDueDate)}</p>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function initCharts() {
+            // Income vs Expense Chart
+            const ctx1 = document.getElementById('incomeExpenseChart').getContext('2d');
+            incomeExpenseChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: [], // Populated by update
+                    datasets: [
+                        {
+                            label: 'Income',
+                            data: [], 
+                            backgroundColor: 'rgba(52, 211, 153, 0.7)',
+                            borderColor: 'rgba(52, 211, 153, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Expenses',
+                            data: [], 
+                            backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                            borderColor: 'rgba(239, 68, 68, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // Project Status Chart
+            const ctx2 = document.getElementById('projectStatusChart').getContext('2d');
+            projectStatusChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: [], // Populated by update
+                    datasets: [{
+                        label: 'Project Status',
+                        data: [], // Populated by update
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)',  // Blue (In Progress)
+                            'rgba(251, 191, 36, 0.7)', // Yellow (On Hold)
+                            'rgba(52, 211, 153, 0.7)',  // Green (Completed)
+                            'rgba(156, 163, 175, 0.7)', // Gray (Quotation)
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(251, 191, 36, 1)',
+                            'rgba(52, 211, 153, 1)',
+                            'rgba(156, 163, 175, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        function updateIncomeExpenseChart(incomeData, expenseData, daysInMonth) {
+            if (!incomeExpenseChart) return;
+            const labels = Array.from({length: daysInMonth}, (_, i) => i + 1);
+            incomeExpenseChart.data.labels = labels;
+            incomeExpenseChart.data.datasets[0].data = incomeData;
+            incomeExpenseChart.data.datasets[1].data = expenseData;
+            incomeExpenseChart.update();
+        }
+
+        function updateProjectStatusChart(statusCounts) {
+            if (!projectStatusChart) return;
+            // Ensure order is consistent
+            const labels = ['In Progress', 'On Hold', 'Completed', 'Quotation'];
+            const data = labels.map(label => statusCounts[label] || 0);
+            
+            projectStatusChart.data.labels = labels;
+            projectStatusChart.data.datasets[0].data = data;
+            projectStatusChart.update();
+        }
+
+
+        // === FORM SUBMISSION HANDLERS ===
+
+        // Login
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            loginError.textContent = '';
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            const btnText = document.getElementById('login-btn-text');
+            const spinner = document.getElementById('login-spinner');
+            toggleSpinner(btnText, spinner, true);
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                console.error("Login Error:", error);
+                loginError.textContent = error.message;
+                showToast(`Login Failed: ${error.message}`, true);
+            } finally {
+                toggleSpinner(btnText, spinner, false);
+            }
+        });
+
+        // Sign Out
+        signOutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error("Sign Out Error:", error);
+                showToast(`Error signing out: ${error.message}`, true);
+            }
+        });
+
+
+        // Add Client
+        addClientForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) return showToast('Not authenticated', true);
+
+            const name = document.getElementById('client-name').value;
+            
+            // FIX: Check if elements exist before getting value (user removed them from HTML)
+            const numberInput = document.getElementById('client-number');
+            const emailInput = document.getElementById('client-email');
+            
+            const number = numberInput ? numberInput.value : '';
+            const email = emailInput ? emailInput.value : '';
+
+            try {
+                await addDoc(clientsCollection, {
+                    name,
+                    number,
+                    email,
+                    createdAt: serverTimestamp()
+                });
+                showToast('Client added successfully!');
+                addClientForm.reset();
+            } catch (error) {
+                console.error("Error adding client:", error);
+                showToast(`Error: ${error.message}`, true);
+            }
+        });
+
+        // Add Project
+        addProjectForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) return showToast('Not authenticated', true);
+
+            const btnText = document.getElementById('add-project-btn-text');
+            const spinner = document.getElementById('add-project-spinner');
+            toggleSpinner(btnText, spinner, true);
+
+            try {
+                let clientId = projectClientSelect.value;
+                let clientName = projectClientSelect.options[projectClientSelect.selectedIndex].dataset.name;
+                
+                if (!clientId) {
+                    throw new Error('Please select a client.');
+                }
+
+                const advanceSlipFile = document.getElementById('project-advance-slip').files[0];
+                const advanceSlipUrl = await uploadImage(advanceSlipFile);
+                
+                const projectName = document.getElementById('project-name').value;
+                const projectType = document.getElementById('project-type').value;
+                const status = document.getElementById('project-status').value;
+                const deadline = document.getElementById('project-deadline').value;
+                const projectPrice = parseFloat(projectPriceInput.value);
+                const advancePayment = parseFloat(projectAdvanceInput.value);
+                const duePayment = projectPrice - advancePayment;
+
+                await addDoc(projectsCollection, {
+                    projectName,
+                    projectType,
+                    clientId,
+                    clientName,
+                    projectPrice,
+                    advancePayment,
+                    duePayment,
+                    advanceSlipUrl,
+                    status,
+                    deadline: deadline ? Timestamp.fromDate(new Date(deadline)) : null,
+                    createdAt: serverTimestamp(),
+                    completionSlipUrl: null,
+                    completedAt: null
+                });
+
+                showToast('Project added successfully!');
+                addProjectForm.reset();
+                projectDueText.textContent = formatCurrency(0);
+
+            } catch (error) {
+                console.error("Error adding project:", error);
+                showToast(`Error: ${error.message}`, true);
+            } finally {
+                toggleSpinner(btnText, spinner, false);
+            }
+        });
+
+        // Add Quotation
+        addQuotationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) return showToast('Not authenticated', true);
+
+            try {
+                const projectName = document.getElementById('quotation-name').value;
+                const clientId = document.getElementById('quotation-client').value;
+                const amount = parseFloat(document.getElementById('quotation-amount').value);
+                
+                if (!clientId) throw new Error('Client is required.');
+
+                await addDoc(quotationsCollection, {
+                    projectName,
+                    clientId,
+                    amount,
+                    status: 'Pending',
+                    createdAt: serverTimestamp()
+                });
+
+                showToast('Quotation saved!');
+                addQuotationForm.reset();
+                
+            } catch (error) {
+                console.error("Error adding quotation:", error);
+                showToast(`Error: ${error.message}`, true);
+            }
+        });
+
+        // Add Task
+        addTaskForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) return showToast('Not authenticated', true);
+
+            try {
+                const name = document.getElementById('task-name').value;
+                const projectId = document.getElementById('task-project').value;
+                
+                // FIX: Check if element exists, provide default if not (user removed it from HTML)
+                const priorityInput = document.getElementById('task-priority');
+                const priority = priorityInput ? priorityInput.value : 'Low';
+
+                await addDoc(tasksCollection, {
+                    name,
+                    projectId: projectId || null,
+                    priority,
+                    status: 'Pending',
+                    createdAt: serverTimestamp()
+                });
+
+                showToast('Task added!');
+                addTaskForm.reset();
+                
+            } catch (error) {
+                console.error("Error adding task:", error);
+                showToast(`Error: ${error.message}`, true);
+            }
+        });
+
+        // Add Recurring
+        addRecurringForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) return showToast('Not authenticated', true);
+
+            try {
+                const serviceName = document.getElementById('recurring-name').value;
+                const clientId = document.getElementById('recurring-client').value;
+                const amount = parseFloat(document.getElementById('recurring-amount').value);
+                const frequency = document.getElementById('recurring-frequency').value;
+                const nextDueDate = document.getElementById('recurring-next-date').value;
+                
+                if (!clientId) throw new Error('Client is required.');
+                if (!nextDueDate) throw new Error('Next Due Date is required.');
+
+                await addDoc(recurringCollection, {
+                    serviceName,
+                    clientId,
+                    amount,
+                    frequency,
+                    nextDueDate: Timestamp.fromDate(new Date(nextDueDate)),
+                    createdAt: serverTimestamp()
+                });
+
+                showToast('Recurring service added!');
+                addRecurringForm.reset();
+                
+            } catch (error) {
+                console.error("Error adding recurring service:", error);
+                showToast(`Error: ${error.message}`, true);
+            }
+        });
+
+        // Add Other Income
+        addOtherIncomeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) return showToast('Not authenticated', true);
+            const btnText = document.getElementById('add-income-btn-text');
+            const spinner = document.getElementById('add-income-spinner');
+            toggleSpinner(btnText, spinner, true);
+            try {
+                const description = document.getElementById('other-income-desc').value;
+                const amount = parseFloat(document.getElementById('other-income-amount').value);
+                const slipFile = document.getElementById('other-income-slip').files[0];
+                const slipUrl = await uploadImage(slipFile);
+                
+                await addDoc(transactionsCollection, {
+                    type: 'Other Income',
+                    description,
+                    amount,
+                    slipUrl,
+                    createdAt: serverTimestamp()
+                });
+                showToast('Income added successfully!');
+                addOtherIncomeForm.reset();
+                addIncomeModal.classList.add('hidden'); // Close modal on success
+            } catch (error) {
+                console.error("Error adding income:", error);
+                showToast(`Error: ${error.message}`, true);
+            } finally {
+                toggleSpinner(btnText, spinner, false);
+            }
+        });
+
+        // Add Expense
+        addExpenseForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) return showToast('Not authenticated', true);
+            const btnText = document.getElementById('add-expense-btn-text');
+            const spinner = document.getElementById('add-expense-spinner');
+            toggleSpinner(btnText, spinner, true);
+            try {
+                const description = document.getElementById('expense-desc').value;
+                const amount = parseFloat(document.getElementById('expense-amount').value);
+                const slipFile = document.getElementById('expense-slip').files[0];
+                const slipUrl = await uploadImage(slipFile);
+                
+                await addDoc(transactionsCollection, {
+                    type: 'Expense',
+                    description,
+                    amount,
+                    slipUrl,
+                    createdAt: serverTimestamp()
+                });
+                showToast('Expense added successfully!');
+                addExpenseForm.reset();
+                addExpenseModal.classList.add('hidden'); // Close modal on success
+            } catch (error) {
+                console.error("Error adding expense:", error);
+                showToast(`Error: ${error.message}`, true);
+            } finally {
+                toggleSpinner(btnText, spinner, false);
+            }
+        });
+
+        // Add Plan
+        addPlanForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) return showToast('Not authenticated', true);
+            const btnText = document.getElementById('add-plan-btn-text');
+            const spinner = document.getElementById('add-plan-spinner');
+            toggleSpinner(btnText, spinner, true);
+            try {
+                const note = document.getElementById('plan-note').value;
+                const imageFile = document.getElementById('plan-image').files[0];
+                const imageUrl = await uploadImage(imageFile);
+                
+                await addDoc(plansCollection, {
+                    note,
+                    imageUrl,
+                    createdAt: serverTimestamp()
+                });
+                showToast('Plan added successfully!');
+                addPlanForm.reset();
+            } catch (error) {
+                console.error("Error adding plan:", error);
+                showToast(`Error: ${error.message}`, true);
+            } finally {
+                toggleSpinner(btnText, spinner, false);
+            }
+        });
+
+
+        // Complete Project
+        completeProjectForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) return showToast('Not authenticated', true);
+
+            const projectId = document.getElementById('complete-project-id').value;
+            const slipFile = document.getElementById('completion-slip').files[0];
+
+            if (!slipFile) return showToast('Completion slip is required.', true);
+
+            const btnText = document.getElementById('complete-project-btn-text');
+            const spinner = document.getElementById('complete-project-spinner');
+            toggleSpinner(btnText, spinner, true);
+
+            try {
+                const completionSlipUrl = await uploadImage(slipFile);
+                if (!completionSlipUrl) throw new Error('Failed to upload completion slip.');
+                
+                const projectRef = doc(projectsCollection, projectId);
+                const projectSnap = await getDoc(projectRef);
+                if (!projectSnap.exists()) throw new Error('Project not found.');
+                const projectData = projectSnap.data();
+
+                await updateDoc(projectRef, {
+                    status: 'Completed',
+                    completionSlipUrl: completionSlipUrl,
+                    completedAt: serverTimestamp()
+                });
+
+                await addDoc(transactionsCollection, {
+                    type: 'Project Income',
+                    description: `Project: ${projectData.projectName}`,
+                    amount: projectData.projectPrice, // Add the *full* project price as income
+                    slipUrl: completionSlipUrl,
+                    createdAt: serverTimestamp(), 
+                    projectId: projectId
+                });
+
+                showToast('Project completed and income recorded!');
+                completeProjectModal.classList.add('hidden');
+                completeProjectForm.reset();
+
+            } catch (error) {
+                console.error("Error completing project:", error);
+                showToast(`Error: ${error.message}`, true);
+            } finally {
+                toggleSpinner(btnText, spinner, false);
+            }
+        });
+
+
+        // === UI EVENT LISTENERS ===
+
+        // Navigation
+        // FIX: Changed from querySelector('nav') to querySelectorAll('nav')
+        // This attaches the click listener to BOTH the desktop sidebar <nav> AND the mobile <nav>
+        document.querySelectorAll('nav').forEach(navElement => {
+            navElement.addEventListener('click', (e) => {
+                // FIX: Target ".sidebar-link" instead of the removed ".sidebar-item"
+                const link = e.target.closest('.sidebar-link');
+                if (!link) return;
+
+                e.preventDefault();
+                const pageId = link.dataset.page;
+
+                // FIX: Updated Active State logic for Desktop and Mobile
+                // 1. Deactivate all links in both navs
+                document.querySelectorAll('.sidebar-link').forEach(item => {
+                    // Desktop styles
+                    item.classList.remove('bg-green-700', 'text-white', 'shadow-lg');
+                    if(item.closest('#sidebar')) item.classList.add('text-gray-300');
+                    
+                    // Mobile styles
+                    item.classList.remove('text-green-600');
+                    if(item.closest('#mobile-nav')) item.classList.add('text-gray-600');
+                });
+
+                // 2. Activate all links matching the page (one for desktop, one for mobile)
+                const activeLinks = document.querySelectorAll(`.sidebar-link[data-page="${pageId}"]`);
+                activeLinks.forEach(activeLink => {
+                    if (activeLink.closest('#sidebar')) {
+                        // Apply desktop active styles
+                        activeLink.classList.add('bg-green-700', 'text-white', 'shadow-lg');
+                        activeLink.classList.remove('text-gray-300');
+                    } else if (activeLink.closest('#mobile-nav')) {
+                        // Apply mobile active styles
+                        activeLink.classList.add('text-green-600');
+                        activeLink.classList.remove('text-gray-600');
+                    }
+                });
+
+
+                document.querySelectorAll('.page-content').forEach(page => page.classList.add('hidden'));
+                document.getElementById(`page-${pageId}`).classList.remove('hidden');
+
+                pageTitle.textContent = link.textContent.trim();
+                
+                // FIX: This logic is no longer needed
+                // sidebar.classList.add('-translate-x-full');
+                // sidebarOverlay.classList.add('hidden');
+            });
+        }); // <-- **THE FIX: Added this missing closing bracket for the forEach loop**
+        
+        // Back to Clients Button
+        backToClientsBtn.addEventListener('click', () => {
+            document.querySelector('a[data-page="clients"]').click();
+        });
+
+        // Quick Add Income Button
+        quickAddIncomeBtn.addEventListener('click', () => {
+            addIncomeModal.classList.remove('hidden');
+        });
+
+        // Mobile Sidebar Toggle (FIX: REMOVED)
+        // menuToggle.addEventListener('click', () => {
+        //     sidebar.classList.remove('-translate-x-full');
+        //     sidebarOverlay.classList.remove('hidden');
+        // });
+        // sidebarOverlay.addEventListener('click', () => {
+        //     sidebar.classList.add('-translate-x-full'); // FIX: Corrected typo from '-translatex-full'
+        //     sidebarOverlay.classList.add('hidden');
+        // });
+
+        // Project Form: Auto-calculate Due Payment
+        function calculateProjectDue() {
+            const price = parseFloat(projectPriceInput.value) || 0;
+            const advance = parseFloat(projectAdvanceInput.value) || 0;
+            const due = price - advance;
+            projectDueText.textContent = formatCurrency(due);
+        }
+        projectPriceInput.addEventListener('input', calculateProjectDue);
+        projectAdvanceInput.addEventListener('input', calculateProjectDue);
+
+        // Complete Project Modal
+        window.openCompleteProjectModal = (projectId) => {
+            document.getElementById('complete-project-id').value = projectId;
+            completeProjectModal.classList.remove('hidden');
+        };
+        cancelCompleteProjectBtn.addEventListener('click', () => {
+            completeProjectModal.classList.add('hidden');
+            completeProjectForm.reset();
+        });
+        
+        // Income/Expense Modal Triggers
+        openAddIncomeBtn.addEventListener('click', () => addIncomeModal.classList.remove('hidden'));
+        openAddExpenseBtn.addEventListener('click', () => addExpenseModal.classList.remove('hidden'));
+        cancelAddIncomeBtn.addEventListener('click', () => {
+            addIncomeModal.classList.add('hidden');
+            addOtherIncomeForm.reset();
+        });
+        cancelAddExpenseBtn.addEventListener('click', () => {
+            addExpenseModal.classList.add('hidden');
+            addExpenseForm.reset();
+        });
+        
+        // Report Filters
+        filterApplyBtn.addEventListener('click', renderFilteredTransactions);
+        filterResetBtn.addEventListener('click', () => {
+            filterDay.value = '';
+            filterMonth.value = '';
+            filterYear.value = '';
+            renderFilteredTransactions();
+        });
+        
+        // === GLOBAL WINDOW FUNCTIONS ===
+        
+        // View Client Profile
+        window.viewClientProfile = async (clientId) => {
+            const client = allClients.find(c => c.id === clientId);
+            if (!client) return showToast('Client not found', true);
+            
+            // 1. Populate details
+            profileClientName.textContent = client.name;
+            profileClientPhone.innerHTML = `<i data-lucide="phone" class="w-4 h-4 mr-2"></i> ${client.number}`;
+            profileClientEmail.innerHTML = `<i data-lucide="mail" class="w-4 h-4 mr-2"></i> ${client.email || 'N/A'}`;
+            
+            // 2. Get client projects
+            const clientProjects = allProjects.filter(p => p.clientId === clientId);
+            
+            let totalBilled = 0;
+            let totalDue = 0;
+            
+            if (clientProjects.length === 0) {
+                 profileProjectsList.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">No projects found for this client.</td></tr>';
+            } else {
+                 profileProjectsList.innerHTML = clientProjects.map(p => {
+                    totalBilled += p.projectPrice;
+                    totalDue += p.duePayment;
+                    return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">${p.projectName}</td>
+                        <td class="px-6 py-4">${formatCurrency(p.projectPrice)}</td>
+                        <td class="px-6 py-4 ${p.duePayment > 0 ? 'text-red-600' : 'text-green-600'}">${formatCurrency(p.duePayment)}</td>
+                        <td class="px-6 py-4">${p.status}</td>
+                        <td class="px-6 py-4">${formatDate(p.createdAt)}</td>
+                    </tr>
+                    `;
+                 }).join('');
+            }
+            
+            // 3. Update stats
+            // FIX: Check if elements exist before setting text (user removed them from HTML)
+            if (profileTotalProjects) profileTotalProjects.textContent = clientProjects.length;
+            if (profileTotalBilled) profileTotalBilled.textContent = formatCurrency(totalBilled);
+            if (profileTotalDue) profileTotalDue.textContent = formatCurrency(totalDue);
+
+            // 4. Show page
+            document.querySelectorAll('.page-content').forEach(page => page.classList.add('hidden'));
+            clientProfilePage.classList.remove('hidden');
+            pageTitle.textContent = "Client Profile";
+            initIcons();
+        }
+
+        // Delete Client
+        window.deleteClient = async (id) => {
+            if (!userId) return showToast('Not authenticated', true);
+            try {
+                await deleteDoc(doc(clientsCollection, id));
+                showToast('Client deleted.');
+            } catch (error) {
+                console.error("Error deleting client:", error);
+                showToast(`Error: ${error.message}`, true);
+            }
+        }
+        
+        // Delete Quotation
+        window.deleteQuotation = async (id) => {
+            if (!userId) return showToast('Not authenticated', true);
+            try {
+                await deleteDoc(doc(quotationsCollection, id));
+                showToast('Quotation deleted.');
+            } catch (error) {
+                console.error("Error deleting quotation:", error);
+                showToast(`Error: ${error.message}`, true);
+            }
+        }
+        
+        // Convert Quotation
+        window.convertQuotation = async (id) => {
+            if (!userId) return showToast('Not authenticated', true);
+            try {
+                const quoteRef = doc(quotationsCollection, id);
+                const quoteSnap = await getDoc(quoteRef);
+                if (!quoteSnap.exists()) throw new Error('Quotation not found.');
+                
+                const q = quoteSnap.data();
+                
+                // 1. Add to Projects
+                await addDoc(projectsCollection, {
+                    projectName: q.projectName,
+                    projectType: 'Other', // Default
+                    clientId: q.clientId,
+                    clientName: allClients.find(c => c.id === q.clientId)?.name || 'Unknown',
+                    projectPrice: q.amount,
+                    advancePayment: 0,
+                    duePayment: q.amount,
+                    advanceSlipUrl: null,
+                    status: 'In Progress', // Set as In Progress
+                    deadline: null,
+                    createdAt: serverTimestamp(),
+                    completionSlipUrl: null,
+                    completedAt: null
+                });
+                
+                // 2. Delete Quotation
+                await deleteDoc(quoteRef);
+                
+                showToast('Quotation converted to project!');
+                document.querySelector('a[data-page="projects"]').click();
+                
+            } catch (error) {
+                console.error("Error converting quotation:", error);
+                showToast(`Error: ${error.message}`, true);
+            }
+        }
+        
+        // Toggle Task Status
+        window.toggleTaskStatus = async (id, currentStatus) => {
+            if (!userId) return showToast('Not authenticated', true);
+            try {
+                const newStatus = currentStatus === 'Pending' ? 'Completed' : 'Pending';
+                await updateDoc(doc(tasksCollection, id), {
+                    status: newStatus
+                });
+                showToast(`Task marked as ${newStatus}`);
+            } catch (error) {
+                console.error("Error updating task:", error);
+                showToast(`Error: ${error.message}`, true);
+            }
+        }
+        
+        // Delete Task
+        window.deleteTask = async (id) => {
+            if (!userId) return showToast('Not authenticated', true);
+            try {
+                await deleteDoc(doc(tasksCollection, id));
+                showToast('Task deleted.');
+            } catch (error) {
+                console.error("Error deleting task:", error);
+                showToast(`Error: ${error.message}`, true);
+            }
+        }
+        
+        // Mark Renewal as Paid
+        window.markRenewalPaid = async (id, amount, frequency, description) => {
+            if (!userId) return showToast('Not authenticated', true);
+            try {
+                // 1. Add transaction
+                await addDoc(transactionsCollection, {
+                    type: 'Recurring Income',
+                    description: `Renewal: ${description}`,
+                    amount: amount,
+                    slipUrl: null,
+                    createdAt: serverTimestamp()
+                });
+                
+                // 2. Update next due date
+                const recurringRef = doc(recurringCollection, id);
+                const recurringSnap = await getDoc(recurringRef);
+                const r = recurringSnap.data();
+                
+                const currentDueDate = r.nextDueDate.toDate();
+                let nextDueDate;
+                
+                if (frequency === 'Monthly') {
+                    nextDueDate = new Date(currentDueDate.setMonth(currentDueDate.getMonth() + 1));
+                } else if (frequency === 'Yearly') {
+                    nextDueDate = new Date(currentDueDate.setFullYear(currentDueDate.getFullYear() + 1));
+                } else {
+                    nextDueDate = currentDueDate; // Failsafe
+                }
+                
+                await updateDoc(recurringRef, {
+                    nextDueDate: Timestamp.fromDate(nextDueDate)
+                });
+                
+                showToast('Renewal payment recorded!');
+                
+            } catch (error) {
+                console.error("Error marking renewal paid:", error);
+                showToast(`Error: ${error.message}`, true);
+            }
+        }
+        
+        // Delete Recurring
+        window.deleteRecurring = async (id) => {
+             if (!userId) return showToast('Not authenticated', true);
+            try {
+                await deleteDoc(doc(recurringCollection, id));
+                showToast('Recurring service deleted.');
+            } catch (error) {
+                console.error("Error deleting recurring service:", error);
+                showToast(`Error: ${error.message}`, true);
+            }
+        }
+
+        // Delete Plan
+        window.deletePlan = async (id) => {
+            if (!userId) return showToast('Not authenticated', true);
+            try {
+                await deleteDoc(doc(plansCollection, id));
+                showToast('Plan deleted.');
+            } catch (error) {
+                console.error("Error deleting plan:", error);
+                showToast(`Error: ${error.message}`, true);
+            }
+        }
+
+
+        // === INITIALIZE APP ===
+        document.addEventListener('DOMContentLoaded', () => {
+            // Init icons *after* defer script has likely run
+            // FIX: DO NOT call initIcons() here. Wait for auth.
+            // initIcons(); 
+            initCharts();
+            initializeFirebase();
+        });
+    </script>
+    
+</body>
+</html>
