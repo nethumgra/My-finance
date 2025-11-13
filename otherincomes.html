@@ -473,8 +473,7 @@
         const mobileLogoutButton = document.getElementById('mobileLogoutButton'); // Mobile logout
 
         // --- Mobile Menu Elements ---
-        // WENAS KALA: querySelectorAll use kala
-        const menuOpenBtns = document.querySelectorAll('#menuOpenBtn');
+        const menuOpenBtn = document.getElementById('menuOpenBtn');
         const mobileMenu = document.getElementById('mobileMenu');
         const menuBackdrop = document.getElementById('menuBackdrop');
 
@@ -648,14 +647,11 @@
 
 
             // === Mobile Menu Toggle Logic ===
-            menuOpenBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    mobileMenu.classList.remove('hidden');
-                    setTimeout(() => mobileMenu.classList.remove('-translate-x-full'), 10); // Slide in
-                    menuBackdrop.classList.remove('hidden');
-                });
+            menuOpenBtn.addEventListener('click', () => {
+                mobileMenu.classList.remove('hidden');
+                setTimeout(() => mobileMenu.classList.remove('-translate-x-full'), 10); // Slide in
+                menuBackdrop.classList.remove('hidden');
             });
-
 
             const closeMenu = () => {
                 mobileMenu.classList.add('-translate-x-full');
@@ -799,14 +795,14 @@
 
                 // --- 1. Clients Listen Karamu (PODU DATA) ---
                 // === WENAS KALA: Database Path (5 segments) ===
-                const clientPath = `/artifacts/${appId}/public/data/clients`; // public/data walata maru kala
+                const clientPath = `/artifacts/${appId}/app_data/common/clients`;
                 unsubscribe.clients = onSnapshot(collection(db, clientPath), (snapshot) => {
                     statTotalClients.textContent = snapshot.size; 
-                }, (error) => { console.error("Error loading clients:", error); statTotalClients.textContent = "E"; });
+                });
 
                 // --- 2. Projects Listen Karamu (PODU DATA) ---
                 // === WENAS KALA: Database Path (5 segments) ===
-                const projectPath = `/artifacts/${appId}/public/data/projects`; // public/data walata maru kala
+                const projectPath = `/artifacts/${appId}/app_data/common/projects`;
                 unsubscribe.projects = onSnapshot(collection(db, projectPath), (snapshot) => {
                     let total = 0, pending = 0, recentProjects = [];
                     snapshot.forEach(doc => {
@@ -819,25 +815,13 @@
                     statPendingProjects.textContent = pending;
                     recentProjects.sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
                     renderRecentProjects(recentProjects.slice(0, 3));
-                }, (error) => { console.error("Error loading projects:", error); statTotalProjects.textContent = "E"; });
+                });
 
                 // --- 3. Transactions & Chart Listen Karamu (PROFILE-SPECIFIC DATA) ---
                 const now = new Date();
                 const startOfMonth = Timestamp.fromDate(new Date(now.getFullYear(), now.getMonth(), 1));
-                
-                // === WENAS KALA: RangeError eka fix karanna try-catch damma ===
-                try {
-                    const monthName = now.toLocaleString('default', { month: 'long' });
-                    const year = now.getFullYear();
-                    currentMonthLabel.textContent = `${monthName} ${year}`;
-                } catch (e) {
-                    console.error("Date formatting error:", e, now);
-                    // Fallback for older browsers or strange environments
-                    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-                    currentMonthLabel.textContent = `${months[now.getMonth()]} ${now.getFullYear()}`;
-                }
-                // ---------------------------------------------------------------------
-                
+                currentMonthLabel.textContent = now.toLocaleString('default', { month: 'long', year: 'long' });
+
                 // === WENAS KALA: Database Path (5 segments) ===
                 const transactionPath = `/artifacts/${appId}/profiles/${profileName}/transactions`;
                 const qTransactions = query(collection(db, transactionPath), where("createdAt", ">=", startOfMonth));
@@ -862,13 +846,13 @@
                 
                 // --- 4. To-Do List Listen Karamu (PODU DATA) ---
                 // === WENAS KALA: Database Path (5 segments) ===
-                const todoPath = `/artifacts/${appId}/public/data/todos`; // public/data walata maru kala
+                const todoPath = `/artifacts/${appId}/app_data/common/todos`;
                 unsubscribe.todos = onSnapshot(collection(db, todoPath), (snapshot) => {
                     let todos = [];
                     snapshot.forEach(doc => todos.push(doc.data()));
                     todos.sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
                     renderDashboardTodos(todos.slice(0, 5));
-                }, (error) => { console.error("Error loading todos:", error); dashboardTodoList.innerHTML = '<p class="text-sm text-red-500 text-center py-4">Error loading tasks.</p>'; });
+                });
             }
             
             // --- Helper functions (Render) ---

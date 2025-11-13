@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator - Applify</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* bg-slate-50 */
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        
+        /* Invoice Preview Styles */
+        .invoice-preview {
+            background-color: white;
+            width: 210mm; /* A4 Width */
+            min-height: 297mm; /* A4 Height */
+            padding: 20mm;
+            margin: auto;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        
+        /* Editable Content Styles */
+        [contenteditable="true"] {
+            outline: 2px dashed #d1d5db; /* Default outline */
+            padding: 4px;
+            border-radius: 4px;
+            transition: outline 0.2s;
+        }
+        [contenteditable="true"]:focus,
+        [contenteditable="true"]:hover {
+            outline: 2px solid #8b5cf6; /* Purple outline on focus */
+            background: #f5f3ff;
+        }
+
+        /* ALUTH: Mobile menu slide-in */
+        #mobileMenu.hidden {
+            transform: translateX(-100%);
+        }
+        #mobileMenu {
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        /* ALUTH: Mobile preview wrapper */
+        .preview-wrapper {
+            overflow-x: auto;
+            width: 100%;
+            padding: 1rem;
+            background-color: #e2e8f0; /* bg-slate-200 */
+        }
+        
+        /* Styles for printing (PDF) */
+        @media print {
+            body { background-color: white; }
+            .sidebar, .controls-panel { display: none; }
+            .preview-panel {
+                width: 100%;
+                padding: 0;
+                margin: 0;
+                overflow: visible;
+            }
+            .invoice-preview {
+                box-shadow: none;
+                margin: 0;
+                width: 100%;
+                min-height: auto;
+                padding: 0;
+            }
+            [contenteditable="true"] {
+                outline: none;
+                padding: 4px 0;
+            }
+            .no-print { display: none; }
+        }
+
+        /* ALUTH: Mobile-specific adjustments */
+        @media (max-width: 768px) {
+            .invoice-preview {
+                width: 100%;
+                min-height: auto;
+                padding: 10mm;
+                /* A4 aspect ratio maintain */
+                height: auto; 
+                min-height: 700px; /* Give some space */
+            }
+            .preview-wrapper {
+                padding: 8px;
+            }
+            .controls-panel {
+                /* Remove fixed height for mobile */
+                height: auto; 
+                overflow-y: visible;
+            }
+            .preview-panel {
+                 /* Remove fixed height for mobile */
+                height: auto;
+            }
+        }
+        
+        /* Specific class to clean PDF output */
+        .printing [contenteditable="true"] {
+            outline: none !important;
+            background: none !important;
+        }
+        .printing .item-remove-btn {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+
+    <div id="menuBackdrop" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-20 hidden md:hidden"></div>
+
+    <aside class="w-64 bg-white flex-shrink-0 flex-col border-r border-gray-200 sidebar hidden md:flex">
+        <div class="h-20 flex items-center px-8">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-600"><path d="M12 3a9 9 0 0 1 9 9 9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9z"></path><path d="M9 9a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3v0a3 3 0 0 1-3-3z"></path><path d="M9 15a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3v0a3 3 0 0 1-3-3z"></path></svg>
+            <span class="text-2xl font-bold text-gray-800 ml-3">Applify.</span>
+        </div>
+       <nav id="sidebarNav" class="flex-1 px-4 py-4 space-y-2"> <a href="index.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                <span class="ml-3">Dashboard</span>
+            </a>
+            
+            <a href="client.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0115 11v-1a1 1 0 00-1-1h-4a1 1 0 00-1 1v1a5 5 0 013.43 1.67A6.97 6.97 0 009 16c0 .34.024.673.07 1H4a2 2 0 00-2 2v1a1 1 0 001 1h14a1 1 0 001-1v-1a2 2 0 00-2-2h-5.07z" /></svg>
+                <span class="ml-3">Clients</span>
+            </a>
+            
+            <a href="projects.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                <span class="ml-3">Projects</span>
+            </a>
+
+            <a href="income-expense.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg>
+                <span class="ml-3">Income & Expense</span>
+            </a>
+
+            <a href="invoice-generator.html" class="nav-link flex items-center px-4 py-3 text-purple-600 bg-purple-50 rounded-lg font-semibold relative">
+                <div class="absolute left-0 top-0 h-full w-1 bg-purple-600 rounded-r-full"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                <span class="ml-3">Invoice Generator</span>
+            </a>
+
+            <a href="todo.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <span class="ml-3">To-Do List</span>
+            </a>
+            
+            <a href="otherincomes.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <span class="ml-3">Other Incomes</span>
+            </a>
+
+            <a href="#" id="logoutButton" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span class="ml-3">Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <aside id="mobileMenu" class="fixed inset-y-0 left-0 w-64 bg-white flex-shrink-0 flex flex-col border-r border-gray-200 z-30 hidden transform -translate-x-full md:hidden">
+        <div class="h-20 flex items-center px-8">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-600"><path d="M12 3a9 9 0 0 1 9 9 9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9z"></path><path d="M9 9a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3v0a3 3 0 0 1-3-3z"></path><path d="M9 15a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3v0a3 3 0 0 1-3-3z"></path></svg>
+            <span class="text-2xl font-bold text-gray-800 ml-3">Applify.</span>
+        </div>
+        <nav id="mobileSidebarNav" class="flex-1 px-4 py-4 space-y-2">
+            <a href="index.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                <span class="ml-3">Dashboard</span>
+            </a>
+            <a href="client.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0115 11v-1a1 1 0 00-1-1h-4a1 1 0 00-1 1v1a5 5 0 013.43 1.67A6.97 6.97 0 009 16c0 .34.024.673.07 1H4a2 2 0 00-2 2v1a1 1 0 001 1h14a1 1 0 001-1v-1a2 2 0 00-2-2h-5.07z" /></svg>
+                <span class="ml-3">Clients</span>
+            </a>
+            <a href="projects.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                <span class="ml-3">Projects</span>
+            </a>
+            <a href="income-expense.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg>
+                <span class="ml-3">Income & Expense</span>
+            </a>
+            <a href="invoice-generator.html" class="nav-link flex items-center px-4 py-3 text-purple-600 bg-purple-50 rounded-lg font-semibold relative">
+                <div class="absolute left-0 top-0 h-full w-1 bg-purple-600 rounded-r-full"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                <span class="ml-3">Invoice Generator</span>
+            </a>
+            <a href="todo.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <span class="ml-3">To-Do List</span>
+            </a>
+            <a href="otherincomes.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <span class="ml-3">Other Incomes</span>
+            </a>
+            <a href="#" id="mobileLogoutButton" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                <span class="ml-3">Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden" style="height: 100vh;">
+
+        <aside class="w-full md:w-80 bg-white flex-shrink-0 p-6 overflow-y-auto border-r border-gray-200 controls-panel">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-gray-800">Invoice Controls</h1>
+                <button id="menuOpenBtn" class="md:hidden text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+            
+            <button id="downloadPdfBtn" class="w-full flex items-center justify-center bg-purple-600 text-white px-5 py-3 rounded-lg text-sm font-medium hover:bg-purple-700 shadow-md transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                Download PDF
+            </button>
+            
+            <hr class="my-6">
+            
+            <div class="relative">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Load Client</label>
+                <button type="button" id="clientSelector" class="w-full bg-white px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-left flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-purple-300">
+                    <span id="selectedClientDisplay" class="text-gray-500">Select a client...</span>
+                    <svg class="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <div id="clientDropdownList" class="absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 hidden" style="max-height: 200px; overflow-y: auto;">
+                    <div class="p-2">
+                        <input type="text" id="clientSearchInput" placeholder="Search clients..." class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-300">
+                    </div>
+                    <div id="clientListContainer">
+                        </div>
+                </div>
+            </div>
+            
+            <hr class="my-6">
+            
+            <button id="addItemBtn" class="w-full flex items-center justify-center bg-green-500 text-white px-5 py-3 rounded-lg text-sm font-medium hover:bg-green-600 shadow-md transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                Add Item Row
+            </button>
+
+            <hr class="my-6">
+            
+            <div>
+                <label for="taxInput" class="block text-sm font-medium text-gray-700 mb-1">Tax (%)</label>
+                <input type="number" id="taxInput" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-300" placeholder="e.g., 5">
+            </div>
+            
+        </aside>
+
+        <main class="flex-1 p-0 md:p-8 overflow-y-auto bg-slate-200 preview-panel pb-20">
+            <div class="preview-wrapper">
+                <div id="invoicePreview" class="invoice-preview">
+                    
+                    <header class="flex justify-between items-start mb-12">
+                        <div>
+                            <h2 class="text-3xl font-bold text-gray-800" contenteditable="true" id="companyName">Your Company</h2>
+                            <p class="text-sm text-gray-600 mt-1" contenteditable="true" id="companyAddress">123 Main Street, City, Country</p>
+                            <p class="text-sm text-gray-600" contenteditable="true" id="companyPhone">+1 (555) 123-4567</p>
+                        </div>
+                        <h1 class="text-5xl font-bold text-gray-800 uppercase text-right">Invoice</h1>
+                    </header>
+                    
+                    <section class="flex justify-between mb-12">
+                        <div>
+                            <h3 class="text-sm font-semibold text-gray-500 uppercase mb-2">Bill To</h3>
+                            <p class="text-lg font-bold text-gray-800" contenteditable="true" id="clientName">Client Name</p>
+                            <p class="text-sm text-gray-600" contenteditable="true" id="clientAddress">Client Address</p>
+                            <p class="text-sm text-gray-600" contenteditable="true" id="clientPhone">Client Phone</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="flex items-center justify-end">
+                                <span class="text-sm font-semibold text-gray-500">Invoice #</span>
+                                <span class="text-sm text-gray-800 ml-2" contenteditable="true" id="invoiceNumber">00001</span>
+                            </div>
+                            <div class="flex items-center justify-end mt-1">
+                                <span class="text-sm font-semibold text-gray-500">Date</span>
+                                <span class="text-sm text-gray-800 ml-2" contenteditable="true" id="invoiceDate">2025-11-12</span>
+                            </div>
+                            <div class="flex items-center justify-end mt-1">
+                                <span class="text-sm font-semibold text-gray-500">Due Date</span>
+                                <span class="text-sm text-gray-800 ml-2" contenteditable="true" id="invoiceDueDate">2025-12-12</span>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section>
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="p-3 text-xs font-semibold text-gray-500 uppercase">Description</th>
+                                    <th class="p-3 text-xs font-semibold text-gray-500 uppercase w-24 text-right">Qty</th>
+                                    <th class="p-3 text-xs font-semibold text-gray-500 uppercase w-32 text-right">Unit Price</th>
+                                    <th class="p-3 text-xs font-semibold text-gray-500 uppercase w-32 text-right">Total</th>
+                                    <th class="p-3 w-10 no-print"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="previewItemList" class="divide-y divide-gray-200">
+                                <tr class="item-row">
+                                    <td class="p-3 text-sm text-gray-700" contenteditable="true">Example Item</td>
+                                    <td class="p-3 text-sm text-gray-700 text-right item-qty" contenteditable="true">2</td>
+                                    <td class="p-3 text-sm text-gray-700 text-right item-price" contenteditable="true">100.00</td>
+                                    <td class="p-3 text-sm text-gray-800 font-medium text-right item-total">200.00</td>
+                                    <td class="p-3 text-center no-print">
+                                        <button class="item-remove-btn text-red-500 hover:text-red-700">&times;</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+                    
+                    <section class="flex justify-end mt-8">
+                        <div class="w-full max-w-xs space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium text-gray-500">Subtotal</span>
+                                <span class="text-sm font-medium text-gray-800" id="subtotalDisplay">LKR 200.00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm font-medium text-gray-500">Tax (<span id="taxPercentDisplay">0</span>%)</span>
+                                <span class="text-sm font-medium text-gray-800" id="taxDisplay">LKR 0.00</span>
+                            </div>
+                            <div class="flex justify-between border-t border-gray-300 pt-3 mt-3">
+                                <span class="text-lg font-bold text-gray-800">Total Due</span>
+                                <span class="text-lg font-bold text-gray-800" id="totalDisplay">LKR 200.00</span>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <footer class="mt-16 border-t pt-8">
+                        <h4 class="text-sm font-semibold text-gray-500 mb-2">Notes</h4>
+                        <p class="text-sm text-gray-600" contenteditable="true" id="invoiceNotes">
+                            Thank you for your business. Please pay by the due date.
+                        </p>
+                    </footer>
+                    
+                </div>
+            </div>
+        </main>
+    </main>
+    
+    <footer class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-10">
+        <nav class="flex justify-around items-center h-16">
+            <a href="index.html" class="nav-link flex flex-col items-center justify-center text-gray-500 hover:text-purple-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                <span class="text-xs font-medium">Home</span>
+            </a>
+            <a href="client.html" class="nav-link flex flex-col items-center justify-center text-gray-500 hover:text-purple-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1-5.4.33A5 5 0 0115 11v-1a1 1 0 00-1-1h-4a1 1 0 00-1 1v1a5 5 0 013.43 1.67A6.97 6.97 0 009 16c0 .34.024.673.07 1H4a2 2 0 00-2 2v1a1 1 0 001 1h14a1 1 0 001-1v-1a2 2 0 00-2-2h-5.07z" />
+                </svg>
+                <span class="text-xs font-medium">Clients</span>
+            </a>
+            <a href="projects.html" class="nav-link flex flex-col items-center justify-center text-gray-500 hover:text-purple-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span class="text-xs font-medium">Projects</span>
+            </a>
+            <a href="invoice-generator.html" class="nav-link flex flex-col items-center justify-center text-purple-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span class="text-xs font-medium">Invoice</span>
+            </a>
+        </nav>
+    </footer>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        
+        // === FIXES ===
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            setPersistence, 
+            browserSessionPersistence, 
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        
+        import { 
+            getFirestore, 
+            setLogLevel,
+            collection,
+            onSnapshot,
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // === GLOBAL VARIABLES ===
+        const firebaseConfigFromUser = {
+            apiKey: "AIzaSyCJGW3-flCwC5y8WXJCJWDvx36eEkw_I5o",
+            authDomain: "pixora-872e3.firebaseapp.com",
+            projectId: "pixora-872e3",
+            storageBucket: "pixora-872e3.firebasestorage.app",
+            messagingSenderId: "315709334461",
+            appId: "1:315709334461:web:a758b041e43837df6d68d4",
+            measurementId: "G-C7J0ZGKR1M"
+        };
+        
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : firebaseConfigFromUser;
+
+        let app, auth, db;
+        
+        // App State
+        let currentUserId = null;
+        let activeProfile = null; // ALUTH
+        let allClients = [];
+        let clientCollectionRef = null;
+        let clientUnsubscribe = null;
+
+        // === DOM Elements ===
+        const clientSelector = document.getElementById('clientSelector');
+        const selectedClientDisplay = document.getElementById('selectedClientDisplay');
+        const clientDropdownList = document.getElementById('clientDropdownList');
+        const clientSearchInput = document.getElementById('clientSearchInput');
+        const clientListContainer = document.getElementById('clientListContainer');
+        
+        const addItemBtn = document.getElementById('addItemBtn');
+        const previewItemList = document.getElementById('previewItemList');
+        const taxInput = document.getElementById('taxInput');
+        const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+        const invoicePreview = document.getElementById('invoicePreview');
+        const logoutButton = document.getElementById('logoutButton');
+        const mobileLogoutButton = document.getElementById('mobileLogoutButton'); // ALUTH
+
+        // ALUTH: Mobile Menu Elements
+        const menuOpenBtn = document.getElementById('menuOpenBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const menuBackdrop = document.getElementById('menuBackdrop');
+
+        // ALUTH: Sidebar Link Update Function
+        function updateSidebarLinks(profileName) {
+            if (!profileName) return;
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            navLinks.forEach(link => {
+                const originalHref = link.getAttribute('href')?.split('?')[0]; 
+                if (originalHref && originalHref !== '#' && originalHref !== '#logoutButton') {
+                    link.href = `${originalHref}?profile=${profileName}`;
+                }
+            });
+            
+            const navs = [document.getElementById('sidebarNav'), document.getElementById('mobileSidebarNav')];
+            navs.forEach(sidebarNav => {
+                if (!sidebarNav) return;
+                
+                const existingSettings = sidebarNav.querySelector('a[href^="settings.html"]');
+                if (existingSettings) existingSettings.remove();
+
+                const logoutBtn = sidebarNav.querySelector('a[href="#logoutButton"]');
+                
+                const settingsLink = document.createElement('a');
+                settingsLink.href = `settings.html?profile=${profileName}`;
+                settingsLink.className = "nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium";
+                settingsLink.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span class="ml-3">Settings</span>
+                `;
+                if(logoutBtn) {
+                    sidebarNav.insertBefore(settingsLink, logoutBtn);
+                }
+            });
+        }
+
+        // === Firebase Initialization ===
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            setLogLevel('debug'); 
+            
+            await setPersistence(auth, browserSessionPersistence);
+
+            // ALUTH: Get Profile from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            activeProfile = urlParams.get('profile');
+            if (!activeProfile) {
+                console.log("No profile in URL. Redirecting to login.");
+                window.location.href = 'index.html';
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUserId = user.uid;
+                   const clientCollectionPath = `/artifacts/${appId}/app_data/common/clients`; // WENAS KALA: Path eka
+                    clientCollectionRef = collection(db, clientCollectionPath);
+                    listenForClients();
+                    updateSidebarLinks(activeProfile); // ALUTH
+                } else {
+                    console.log("User is signed out. Redirecting to login...");
+                    currentUserId = null;
+                    if(clientUnsubscribe) clientUnsubscribe();
+                    clientListContainer.innerHTML = '<div class="p-3 text-red-500">Please login.</div>';
+                    window.location.href = 'index.html'; 
+                }
+            });
+
+            // WENAS KALA: Logout button dekama handle karanna
+            const handleLogout = async (e) => {
+                e.preventDefault();
+                await signOut(auth);
+            };
+            logoutButton.addEventListener('click', handleLogout);
+            mobileLogoutButton.addEventListener('click', handleLogout); // ALUTH
+            
+        } catch (error) {
+            console.error("Error initializing Firebase:", error);
+            clientListContainer.innerHTML = `<div class="p-3 text-red-500">Firebase Error</div>`;
+        }
+
+        // ALUTH: Mobile Menu Toggle Logic
+        menuOpenBtn.addEventListener('click', () => {
+            mobileMenu.classList.remove('hidden');
+            setTimeout(() => mobileMenu.classList.remove('-translate-x-full'), 10);
+            menuBackdrop.classList.remove('hidden');
+        });
+
+        const closeMenu = () => {
+            mobileMenu.classList.add('-translate-x-full');
+            menuBackdrop.classList.add('hidden');
+            setTimeout(() => mobileMenu.classList.add('hidden'), 300);
+        };
+        
+        menuBackdrop.addEventListener('click', closeMenu);
+        mobileMenu.addEventListener('click', (e) => {
+            if (e.target.closest('a')) {
+                closeMenu();
+            }
+        });
+
+        // === Client Dropdown Logic ===
+        function listenForClients() {
+            if (!clientCollectionRef) return;
+            if(clientUnsubscribe) clientUnsubscribe();
+            clientUnsubscribe = onSnapshot(clientCollectionRef, (snapshot) => {
+                allClients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderClientDropdown();
+            });
+        }
+
+        function renderClientDropdown() {
+            const searchTerm = clientSearchInput.value.toLowerCase();
+            clientListContainer.innerHTML = '';
+            
+            const filteredClients = allClients.filter(client => 
+                client.name.toLowerCase().includes(searchTerm) ||
+                (client.whatsappNumber && client.whatsappNumber.includes(searchTerm)) 
+            );
+
+            if (filteredClients.length === 0) {
+                clientListContainer.innerHTML = '<div class="p-3 text-sm text-gray-500">No clients found.</div>';
+                return;
+            }
+
+            filteredClients.forEach(client => {
+                const item = document.createElement('div');
+                item.className = 'p-3 hover:bg-purple-50 cursor-pointer border-b border-gray-100 client-item';
+                item.dataset.id = client.id;
+                item.innerHTML = `
+                    <div class="text-sm font-medium text-gray-900">${client.name}</div>
+                    <div class="text-xs text-gray-500">${client.whatsappNumber || ''}</div>
+                `;
+                clientListContainer.appendChild(item);
+            });
+        }
+
+        clientListContainer.addEventListener('click', (e) => {
+            const item = e.target.closest('.client-item');
+            if (item) {
+                const clientId = item.dataset.id;
+                const client = allClients.find(c => c.id === clientId);
+                if (client) {
+                    // Auto-fill the invoice
+                    document.getElementById('clientName').textContent = client.name;
+                    document.getElementById('clientPhone').textContent = client.whatsappNumber || ''; 
+                    document.getElementById('clientAddress').textContent = 'Client Address Line 1'; 
+                }
+                selectedClientDisplay.textContent = client.name;
+                clientDropdownList.classList.add('hidden');
+            }
+        });
+
+        clientSelector.addEventListener('click', () => clientDropdownList.classList.toggle('hidden'));
+        clientSearchInput.addEventListener('input', renderClientDropdown);
+        document.addEventListener('click', (e) => {
+            if (!clientSelector.contains(e.target) && !clientDropdownList.contains(e.target)) {
+                clientDropdownList.classList.add('hidden');
+            }
+        });
+        
+        // === Invoice Logic ===
+
+        // 1. Add New Item Row
+        addItemBtn.addEventListener('click', () => {
+            const newRow = document.createElement('tr');
+            newRow.className = 'item-row';
+            newRow.innerHTML = `
+                <td class="p-3 text-sm text-gray-700" contenteditable="true">New Item</td>
+                <td class="p-3 text-sm text-gray-700 text-right item-qty" contenteditable="true">1</td>
+                <td class="p-3 text-sm text-gray-700 text-right item-price" contenteditable="true">0.00</td>
+                <td class="p-3 text-sm text-gray-800 font-medium text-right item-total">0.00</td>
+                <td class="p-3 text-center no-print">
+                    <button class="item-remove-btn text-red-500 hover:text-red-700">&times;</button>
+                </td>
+            `;
+            previewItemList.appendChild(newRow);
+            calculateTotals();
+        });
+
+        // 2. Remove Item Row
+        previewItemList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('item-remove-btn')) {
+                e.target.closest('.item-row').remove();
+                calculateTotals();
+            }
+        });
+
+        // 3. Calculate Totals
+        function calculateTotals() {
+            let subtotal = 0;
+            
+            previewItemList.querySelectorAll('.item-row').forEach(row => {
+                const qty = parseFloat(row.querySelector('.item-qty').textContent) || 0;
+                const price = parseFloat(row.querySelector('.item-price').textContent) || 0;
+                const total = qty * price;
+                
+                row.querySelector('.item-total').textContent = total.toFixed(2);
+                subtotal += total;
+            });
+            
+            const taxPercent = parseFloat(taxInput.value) || 0;
+            const taxAmount = subtotal * (taxPercent / 100);
+            const finalTotal = subtotal + taxAmount;
+            
+            // Update summary
+            document.getElementById('subtotalDisplay').textContent = `LKR ${subtotal.toFixed(2)}`;
+            document.getElementById('taxPercentDisplay').textContent = taxPercent;
+            document.getElementById('taxDisplay').textContent = `LKR ${taxAmount.toFixed(2)}`;
+            document.getElementById('totalDisplay').textContent = `LKR ${finalTotal.toFixed(2)}`;
+        }
+
+        // 4. Add listeners to recalculate on edit
+        taxInput.addEventListener('input', calculateTotals);
+        previewItemList.addEventListener('input', (e) => {
+            if (e.target.classList.contains('item-qty') || e.target.classList.contains('item-price')) {
+                calculateTotals();
+            }
+        });
+
+        // 5. Download PDF
+        downloadPdfBtn.addEventListener('click', () => {
+            // Add 'printing' class to hide outlines
+            invoicePreview.classList.add('printing');
+            
+            const opt = {
+                margin: 0,
+                filename: `Invoice-${document.getElementById('invoiceNumber').textContent}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Run html2pdf and remove 'printing' class after
+            html2pdf().from(invoicePreview).set(opt).save().then(() => {
+                invoicePreview.classList.remove('printing');
+            });
+        });
+        
+        // Initial call
+        calculateTotals();
+        
+        // Set default dates
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('invoiceDate').textContent = today;
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 30);
+        document.getElementById('invoiceDueDate').textContent = dueDate.toISOString().split('T')[0];
+
+    </script>
+</body>
+</html>

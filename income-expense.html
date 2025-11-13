@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income & Expense - Applify</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* bg-slate-50 */
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        
+        /* Modal backdrop blur */
+        .modal-backdrop { backdrop-filter: blur(2px); }
+        
+        /* Chart container */
+        .chart-container {
+            height: 350px;
+        }
+        
+        /* Mobile chart tabs */
+        .chart-tab-active {
+            background-color: #7c3aed; /* bg-purple-600 */
+            color: white;
+        }
+        
+        /* ALUTH: Mobile menu slide-in */
+        #mobileMenu.hidden {
+            transform: translateX(-100%);
+        }
+        #mobileMenu {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* ALUTH: Mobile Table Overflow */
+        @media (max-width: 768px) {
+            .table-container {
+                overflow-x: auto;
+            }
+            .transaction-table {
+                min-width: 640px; /* Force horizontal scroll if needed */
+            }
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+
+    <div id="menuBackdrop" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-20 hidden md:hidden"></div>
+
+    <aside class="w-64 bg-white flex-shrink-0 flex-col border-r border-gray-200 hidden md:flex">
+        <div class="h-20 flex items-center px-8">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-600"><path d="M12 3a9 9 0 0 1 9 9 9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9z"></path><path d="M9 9a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3v0a3 3 0 0 1-3-3z"></path><path d="M9 15a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3v0a3 3 0 0 1-3-3z"></path></svg>
+            <span class="text-2xl font-bold text-gray-800 ml-3">Applify.</span>
+        </div>
+
+        <nav id="sidebarNav" class="flex-1 px-4 py-4 space-y-2">
+            <a href="index.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                <span class="ml-3">Dashboard</span>
+            </a>
+            
+            <a href="client.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0115 11v-1a1 1 0 00-1-1h-4a1 1 0 00-1 1v1a5 5 0 013.43 1.67A6.97 6.97 0 009 16c0 .34.024.673.07 1H4a2 2 0 00-2 2v1a1 1 0 001 1h14a1 1 0 001-1v-1a2 2 0 00-2-2h-5.07z" /></svg>
+                <span class="ml-3">Clients</span>
+            </a>
+            
+            <a href="projects.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                <span class="ml-3">Projects</span>
+            </a>
+
+            <a href="income-expense.html" class="nav-link flex items-center px-4 py-3 text-purple-600 bg-purple-50 rounded-lg font-semibold relative">
+                <div class="absolute left-0 top-0 h-full w-1 bg-purple-600 rounded-r-full"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg>
+                <span class="ml-3">Income & Expense</span>
+            </a>
+            
+            <a href="invoice-generator.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                <span class="ml-3">Invoice Generator</span>
+            </a>
+            <a href="todo.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <span class="ml-3">To-Do List</span>
+            </a>
+            <a href="otherincomes.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <span class="ml-3">Other Incomes</span>
+            </a>
+
+            <a href="#" id="logoutButton" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                <span class="ml-3">Logout</span>
+            </a>
+        </nav>
+        
+        <div class="p-6 mt-auto">
+            <div class="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl p-6 text-white text-center shadow-lg">
+                <img src="https://placehold.co/150x100/ffffff/a78bfa?text=Premium+Feature" 
+                     onerror="this.src='https://placehold.co/150x100/ffffff/a78bfa?text=Premium+Feature'" 
+                     alt="Upgrade to Premium" 
+                     class="mx-auto -mt-12 rounded-lg" style="width: 120px; height: 80px; object-fit: cover;">
+                <p class="font-semibold mt-4">Upgrade to Premium</p>
+                <p class="text-xs text-purple-100 mt-1 mb-4">Go Pro to unlock more features</p>
+                <button class="w-full bg-white text-purple-600 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-gray-100 transition-colors">
+                    Upgrade
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <aside id="mobileMenu" class="fixed inset-y-0 left-0 w-64 bg-white flex-shrink-0 flex flex-col border-r border-gray-200 z-30 hidden transform -translate-x-full md:hidden">
+        <div class="h-20 flex items-center px-8">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-600"><path d="M12 3a9 9 0 0 1 9 9 9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9z"></path><path d="M9 9a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3v0a3 3 0 0 1-3-3z"></path><path d="M9 15a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3v0a3 3 0 0 1-3-3z"></path></svg>
+            <span class="text-2xl font-bold text-gray-800 ml-3">Applify.</span>
+        </div>
+        <nav id="mobileSidebarNav" class="flex-1 px-4 py-4 space-y-2">
+            <a href="index.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                <span class="ml-3">Dashboard</span>
+            </a>
+            <a href="client.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0115 11v-1a1 1 0 00-1-1h-4a1 1 0 00-1 1v1a5 5 0 013.43 1.67A6.97 6.97 0 009 16c0 .34.024.673.07 1H4a2 2 0 00-2 2v1a1 1 0 001 1h14a1 1 0 001-1v-1a2 2 0 00-2-2h-5.07z" /></svg>
+                <span class="ml-3">Clients</span>
+            </a>
+            <a href="projects.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                <span class="ml-3">Projects</span>
+            </a>
+            <a href="income-expense.html" class="nav-link flex items-center px-4 py-3 text-purple-600 bg-purple-50 rounded-lg font-semibold relative">
+                <div class="absolute left-0 top-0 h-full w-1 bg-purple-600 rounded-r-full"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg>
+                <span class="ml-3">Income & Expense</span>
+            </a>
+            <a href="invoice-generator.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                <span class="ml-3">Invoice Generator</span>
+            </a>
+            <a href="todo.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <span class="ml-3">To-Do List</span>
+            </a>
+            <a href="otherincomes.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <span class="ml-3">Other Incomes</span>
+            </a>
+            <a href="#" id="mobileLogoutButton" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                <span class="ml-3">Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto pb-20" style="height: 100vh;">
+        
+        <header class="flex justify-between items-center mb-8">
+            <button id="menuOpenBtn" class="md:hidden text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+            
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Income & Expense</h1>
+            
+            <div class="flex items-center gap-2">
+                <select id="monthFilter" class="bg-white rounded-lg py-2 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-300 shadow-sm border border-gray-200">
+                    <option value="">This Month</option>
+                </select>
+                <select id="yearFilter" class="bg-white rounded-lg py-2 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-300 shadow-sm border border-gray-200">
+                </select>
+                
+                <img class="w-10 h-10 rounded-full cursor-pointer hidden md:block" 
+                     src="https://placehold.co/40x40/EADCFB/5B21B6?text=CJ" 
+                     onerror="this.src='https://placehold.co/40x40/EADCFB/5B21B6?text=CJ'" 
+                     alt="Candace Jules">
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm">
+                <p class="text-sm font-medium text-gray-500">Total Income</p>
+                <p id="totalIncome" class="text-3xl font-bold text-green-600 mt-1">LKR 0.00</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm">
+                <p class="text-sm font-medium text-gray-500">Total Expense</p>
+                <p id="totalExpense" class="text-3xl font-bold text-red-600 mt-1">LKR 0.00</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm">
+                <p class="text-sm font-medium text-gray-500">Net Profit (This Period)</p>
+                <p id="netProfit" class="text-3xl font-bold text-blue-600 mt-1">LKR 0.00</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm">
+                <p class="text-sm font-medium text-gray-500">Total Savings</p>
+                <p id="totalSavings" class="text-3xl font-bold text-purple-600 mt-1">LKR 0.00</p>
+            </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4 mb-6">
+            <button id="addIncomeBtn" class="flex-1 flex items-center justify-center bg-green-500 text-white px-5 py-3 rounded-lg text-sm font-medium hover:bg-green-600 shadow-md transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                Add Manual Income
+            </button>
+            <button id="addExpenseBtn" class="flex-1 flex items-center justify-center bg-red-500 text-white px-5 py-3 rounded-lg text-sm font-medium hover:bg-red-600 shadow-md transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg>
+                Add Manual Expense
+            </button>
+            <button id="addSavingBtn" class="flex-1 flex items-center justify-center bg-purple-600 text-white px-5 py-3 rounded-lg text-sm font-medium hover:bg-purple-700 shadow-md transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                Add Manual Saving
+            </button>
+        </div>
+
+        <div class="mb-6">
+            <div class="sm:hidden mb-4">
+                <div class="flex border-b border-gray-200">
+                    <button id="tabBar" class="chart-tab chart-tab-active flex-1 py-2 px-4 text-sm font-medium text-center text-gray-500" data-chart="chartBar">Summary</button>
+                    <button id="tabPie" class="chart-tab flex-1 py-2 px-4 text-sm font-medium text-center text-gray-500" data-chart="chartPie">Breakdown</button>
+                    <button id="tabLine" class="chart-tab flex-1 py-2 px-4 text-sm font-medium text-center text-gray-500" data-chart="chartLine">Savings</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div id="chartBar" class="chart-wrapper bg-white p-6 rounded-2xl shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Income vs Expense</h3>
+                    <div class="chart-container">
+                        <canvas id="incomeExpenseBarChart"></canvas>
+                    </div>
+                </div>
+                <div id="chartPie" class="chart-wrapper bg-white p-6 rounded-2xl shadow-sm hidden md:block">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Income Source Breakdown</h3>
+                    <div class="chart-container">
+                        <canvas id="incomePieChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm md:col-span-2">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div id="chartLine" class="chart-wrapper md:col-span-2 hidden md:block">
+                             <h3 class="text-lg font-semibold text-gray-800 mb-4">Savings Over Time</h3>
+                            <div class="chart-container" style="height: 250px;">
+                                <canvas id="savingsLineChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="border-l border-gray-100 pl-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Auto-Savings</h3>
+                            <p class="text-sm text-gray-600 mb-3">Save a percentage of your monthly profit automatically.</p>
+                            <form id="autoSaveForm">
+                                <label for="autoSavePercentage" class="block text-sm font-medium text-gray-700">Percentage (%)</label>
+                                <div class="flex gap-2 mt-1">
+                                    <input type="number" id="autoSavePercentage" min="0" max="100" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-300" placeholder="e.g., 10">
+                                    <button type="submit" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300">Save %</button>
+                                </div>
+                            </form>
+                            <button id="runAutoSaveBtn" class="w-full bg-purple-100 text-purple-700 px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-purple-200 shadow-sm mt-4">
+                                Run Auto-Save for This Period
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden table-container">
+            <h3 class="text-lg font-semibold text-gray-800 p-6">Recent Transactions</h3>
+            <table class="w-full divide-y divide-gray-200 transaction-table">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Description</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Slip</th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionTableBody" class="bg-white divide-y divide-gray-200">
+                    </tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <footer class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-10">
+        <nav class="flex justify-around items-center h-16">
+            <a href="index.html" class="nav-link flex flex-col items-center justify-center text-gray-500 hover:text-purple-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                <span class="text-xs font-medium">Home</span>
+            </a>
+            <a href="client.html" class="nav-link flex flex-col items-center justify-center text-gray-500 hover:text-purple-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0115 11v-1a1 1 0 00-1-1h-4a1 1 0 00-1 1v1a5 5 0 013.43 1.67A6.97 6.97 0 009 16c0 .34.024.673.07 1H4a2 2 0 00-2 2v1a1 1 0 001 1h14a1 1 0 001-1v-1a2 2 0 00-2-2h-5.07z" />
+                </svg>
+                <span class="text-xs font-medium">Clients</span>
+            </a>
+            <a href="projects.html" class="nav-link flex flex-col items-center justify-center text-gray-500 hover:text-purple-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span class="text-xs font-medium">Projects</span>
+            </a>
+            <a href="income-expense.html" class="nav-link flex flex-col items-center justify-center text-purple-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                </svg>
+                <span class="text-xs font-medium">Income</span>
+            </a>
+        </nav>
+    </footer>
+
+    <div id="transactionModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 modal-backdrop overflow-y-auto h-full w-full flex items-center justify-center hidden z-40">
+        <div class="relative mx-auto p-6 border w-full max-w-lg shadow-lg rounded-2xl bg-white m-4">
+            <form id="transactionForm">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="modalTitle" class="text-2xl font-bold text-gray-800">Add Transaction</h3>
+                    <button type="button" class="closeModalBtn text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <input type="hidden" id="transactionType">
+                <div class="space-y-4">
+                    <div>
+                        <label for="transactionDesc" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <input type="text" id="transactionDesc" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-300" required>
+                    </div>
+                    <div>
+                        <label for="transactionAmount" class="block text-sm font-medium text-gray-700 mb-1">Amount (LKR)</label>
+                        <input type="number" id="transactionAmount" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-300" required>
+                    </div>
+                    <div>
+                        <label for="transactionSlip" class="block text-sm font-medium text-gray-700 mb-1">Slip (Optional)</label>
+                        <input type="file" id="transactionSlip" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
+                        <p class="text-xs text-gray-500 mt-1">You can optionally attach a slip.</p>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button type="button" class="cancelModalBtn bg-gray-100 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-200 shadow-sm mr-3">
+                        Cancel
+                    </button>
+                    <button type="submit" id="saveTransactionBtn" class="bg-purple-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-purple-700 shadow-md flex items-center justify-center min-w-[120px]">
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="savingModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 modal-backdrop overflow-y-auto h-full w-full flex items-center justify-center hidden z-40">
+        <div class="relative mx-auto p-6 border w-full max-w-lg shadow-lg rounded-2xl bg-white m-4">
+            <form id="savingForm">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold text-gray-800">Add Manual Saving</h3>
+                    <button type="button" class="closeModalBtn text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label for="savingAmount" class="block text-sm font-medium text-gray-700 mb-1">Amount (LKR)</label>
+                        <input type="number" id="savingAmount" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-300" required>
+                    </div>
+                    <div>
+                        <label for="savingDesc" class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                        <input type="text" id="savingDesc" placeholder="e.g., Monthly goal" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-300">
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button type="button" class="cancelModalBtn bg-gray-100 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-200 shadow-sm mr-3">
+                        Cancel
+                    </button>
+                    <button type="submit" id="saveSavingBtn" class="bg-purple-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-purple-700 shadow-md flex items-center justify-center min-w-[120px]">
+                        Save Saving
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            setPersistence, 
+            browserSessionPersistence, 
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        
+        import { 
+            getFirestore, 
+            setLogLevel,
+            collection,
+            addDoc,
+            doc,
+            setDoc,
+            getDoc,
+            onSnapshot,
+            query,
+            where,
+            serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // === GLOBAL VARIABLES ===
+        const firebaseConfigFromUser = {
+            apiKey: "AIzaSyCJGW3-flCwC5y8WXJCJWDvx36eEkw_I5o",
+            authDomain: "pixora-872e3.firebaseapp.com",
+            projectId: "pixora-872e3",
+            storageBucket: "pixora-872e3.firebasestorage.app",
+            messagingSenderId: "315709334461",
+            appId: "1:315709334461:web:a758b041e43837df6d68d4",
+            measurementId: "G-C7J0ZGKR1M"
+        };
+        const IMG_API_KEY = "6e01e547d8bad62ffd422d0cc7851ac3";
+        
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : firebaseConfigFromUser;
+
+        let app, auth, db;
+        
+        // App State
+        let currentUserId = null;
+        let activeProfile = null; // <-- ALUTH
+        let allProjects = [], allTransactions = [], allSavings = [];
+        let settings = { autoSavePercentage: 0 };
+        let unsubscribe = { projects: null, transactions: null, savings: null, settings: null };
+        let currentMonth, currentYear;
+        
+        // Chart Instances
+        let chartBar, chartPie, chartLine;
+
+        // === DOM Elements ===
+        const monthFilter = document.getElementById('monthFilter');
+        const yearFilter = document.getElementById('yearFilter');
+        const totalIncomeEl = document.getElementById('totalIncome');
+        const totalExpenseEl = document.getElementById('totalExpense');
+        const netProfitEl = document.getElementById('netProfit');
+        const totalSavingsEl = document.getElementById('totalSavings');
+        
+        const addIncomeBtn = document.getElementById('addIncomeBtn');
+        const addExpenseBtn = document.getElementById('addExpenseBtn');
+        const addSavingBtn = document.getElementById('addSavingBtn');
+        
+        const transactionModal = document.getElementById('transactionModal');
+        const transactionForm = document.getElementById('transactionForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const saveTransactionBtn = document.getElementById('saveTransactionBtn');
+        
+        const savingModal = document.getElementById('savingModal');
+        const savingForm = document.getElementById('savingForm');
+        const saveSavingBtn = document.getElementById('saveSavingBtn');
+        
+        const autoSaveForm = document.getElementById('autoSaveForm');
+        const autoSavePercentageInput = document.getElementById('autoSavePercentage');
+        const runAutoSaveBtn = document.getElementById('runAutoSaveBtn');
+
+        const transactionTableBody = document.getElementById('transactionTableBody');
+        
+        const chartTabs = document.querySelectorAll('.chart-tab');
+        const chartWrappers = document.querySelectorAll('.chart-wrapper');
+        const logoutButton = document.getElementById('logoutButton');
+        const mobileLogoutButton = document.getElementById('mobileLogoutButton'); // ALUTH
+
+        // ALUTH: Mobile Menu Elements
+        const menuOpenBtn = document.getElementById('menuOpenBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const menuBackdrop = document.getElementById('menuBackdrop');
+
+
+        // === ALUTH: Sidebar Link Update Function ===
+        function updateSidebarLinks(profileName) {
+            if (!profileName) return;
+            
+            // Sidebar dekama + bottom nav eka update karamu
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            navLinks.forEach(link => {
+                const originalHref = link.getAttribute('href')?.split('?')[0]; 
+                if (originalHref && originalHref !== '#' && originalHref !== '#logoutButton') {
+                    link.href = `${originalHref}?profile=${profileName}`;
+                }
+            });
+            
+            // Desktop + Mobile sidebar walata Settings link eka add karamu
+            const navs = [document.getElementById('sidebarNav'), document.getElementById('mobileSidebarNav')];
+            navs.forEach(sidebarNav => {
+                if (!sidebarNav) return;
+                
+                const existingSettings = sidebarNav.querySelector('a[href^="settings.html"]');
+                if (existingSettings) existingSettings.remove();
+
+                const logoutBtn = sidebarNav.querySelector('a[href="#logoutButton"]');
+                
+                const settingsLink = document.createElement('a');
+                settingsLink.href = `settings.html?profile=${profileName}`;
+                settingsLink.className = "nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium";
+                settingsLink.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span class="ml-3">Settings</span>
+                `;
+                if(logoutBtn) {
+                    sidebarNav.insertBefore(settingsLink, logoutBtn);
+                }
+            });
+        }
+
+
+        // === Firebase Initialization ===
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            setLogLevel('debug'); 
+            console.log("Firebase Initialized Successfully for Income Page.");
+            
+            await setPersistence(auth, browserSessionPersistence);
+
+            // === ALUTH: Get Profile from URL ===
+            const urlParams = new URLSearchParams(window.location.search);
+            activeProfile = urlParams.get('profile');
+            if (!activeProfile) {
+                console.log("No profile in URL. Redirecting to login.");
+                window.location.href = 'index.html';
+            }
+            // ==================================
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    console.log("User is signed in:", user.uid);
+                    currentUserId = user.uid;
+                    listenForData();
+                    updateSidebarLinks(activeProfile); // <-- ALUTH
+                } else {
+                    console.log("User is signed out. Redirecting...");
+                    currentUserId = null;
+                    Object.values(unsubscribe).forEach(unsub => unsub && unsub());
+                    window.location.href = 'index.html';
+                }
+            });
+            
+            // === WENAS KALA: Logout button dekama handle karanna ===
+            const handleLogout = async (e) => {
+                e.preventDefault();
+                await signOut(auth);
+            };
+            logoutButton.addEventListener('click', handleLogout);
+            mobileLogoutButton.addEventListener('click', handleLogout); // ALUTH
+
+        } catch (error)
+        {
+            console.error("Error initializing Firebase:", error);
+            document.querySelector('main').innerHTML = `<div class="p-8 text-red-600"><strong>Firebase Error:</strong> ${error.message}</div>`;
+        }
+        
+        // === ALUTH: Mobile Menu Toggle Logic ===
+        menuOpenBtn.addEventListener('click', () => {
+            mobileMenu.classList.remove('hidden');
+            setTimeout(() => mobileMenu.classList.remove('-translate-x-full'), 10);
+            menuBackdrop.classList.remove('hidden');
+        });
+
+        const closeMenu = () => {
+            mobileMenu.classList.add('-translate-x-full');
+            menuBackdrop.classList.add('hidden');
+            setTimeout(() => mobileMenu.classList.add('hidden'), 300);
+        };
+        
+        menuBackdrop.addEventListener('click', closeMenu);
+        mobileMenu.addEventListener('click', (e) => {
+            if (e.target.closest('a')) {
+                closeMenu();
+            }
+        });
+
+        // === Filter Setup ===
+        function setupFilters() {
+            const now = new Date();
+            currentMonth = now.getMonth();
+            currentYear = now.getFullYear();
+            
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            monthFilter.innerHTML = '<option value="">All Months</option>';
+            months.forEach((month, index) => {
+                const selected = index === currentMonth ? ' selected' : '';
+                monthFilter.add(new Option(month, index, false, selected));
+            });
+            monthFilter.value = currentMonth;
+            
+            yearFilter.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const year = currentYear - i;
+                const selected = year === currentYear ? ' selected' : '';
+                yearFilter.add(new Option(year, year, false, selected));
+            }
+            
+            monthFilter.addEventListener('change', updateDashboard);
+            yearFilter.addEventListener('change', updateDashboard);
+        }
+        setupFilters();
+
+        // === Data Functions ===
+        
+        // 1. Listen for all data
+        function listenForData() {
+            if (!currentUserId || !activeProfile) return; 
+            
+            // === ALUTH DATABASE PATHS ===
+            const projectPath = `/artifacts/${appId}/app_data/common/projects`; // <-- FIX: Path wenas kala
+            const transactionPath = `/artifacts/${appId}/profiles/${activeProfile}/transactions`;
+            const savingPath = `/artifacts/${appId}/profiles/${activeProfile}/savings`;
+            const settingsPath = `/artifacts/${appId}/profiles/${activeProfile}/settings/main`;
+
+            Object.values(unsubscribe).forEach(unsub => unsub && unsub());
+
+            // Listen for Projects (Common)
+            unsubscribe.projects = onSnapshot(collection(db, projectPath), (snapshot) => {
+                allProjects = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+                updateDashboard();
+            });
+
+            // Listen for Manual Transactions (Profile-specific)
+            unsubscribe.transactions = onSnapshot(collection(db, transactionPath), (snapshot) => {
+                allTransactions = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+                updateDashboard();
+            });
+            
+            // Listen for Savings (Profile-specific)
+            unsubscribe.savings = onSnapshot(collection(db, savingPath), (snapshot) => {
+                allSavings = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+                updateDashboard();
+            });
+            
+            // Listen for Settings (Profile-specific)
+            unsubscribe.settings = onSnapshot(doc(db, settingsPath), (doc) => {
+                if (doc.exists()) {
+                    settings = doc.data();
+                    autoSavePercentageInput.value = settings.autoSavePercentage || 0;
+                } else {
+                    console.log("No settings doc, using defaults.");
+                }
+            });
+        }
+
+        // 2. Main Dashboard Update Function
+        function updateDashboard() {
+            const selectedMonth = monthFilter.value;
+            const selectedYear = yearFilter.value;
+            
+            const filterDate = (item) => {
+                if (!item.createdAt) return false;
+                const date = item.createdAt.toDate ? item.createdAt.toDate() : new Date(item.createdAt);
+                if (isNaN(date.getTime())) return false; 
+                const yearMatch = date.getFullYear() == selectedYear;
+                const monthMatch = (selectedMonth === "") || (date.getMonth() == selectedMonth);
+                return yearMatch && monthMatch;
+            };
+
+            const filteredProjects = allProjects.filter(filterDate);
+            const filteredTransactions = allTransactions.filter(filterDate);
+            const filteredSavings = allSavings.filter(filterDate);
+
+            // Calculate Stats
+            const projectIncome = filteredTransactions // <-- FIX: Projects walin nemei, transactions walin ganna one
+                .filter(t => t.type === 'income' && t.source === 'project')
+                .reduce((sum, t) => sum + (t.amount || 0), 0);
+                
+            const manualIncome = filteredTransactions
+                .filter(t => t.type === 'income' && t.source !== 'project') // <-- 'project' nathi ewa
+                .reduce((sum, t) => sum + (t.amount || 0), 0);
+                
+            const totalIncome = projectIncome + manualIncome;
+
+            const totalExpense = filteredTransactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + (t.amount || 0), 0);
+                
+            const netProfit = totalIncome - totalExpense;
+            
+            const totalSavings = filteredSavings.reduce((sum, s) => sum + (s.amount || 0), 0);
+
+            // Update Stat Cards
+            totalIncomeEl.textContent = `LKR ${totalIncome.toFixed(2)}`;
+            totalExpenseEl.textContent = `LKR ${totalExpense.toFixed(2)}`;
+            totalSavingsEl.textContent = `LKR ${totalSavings.toFixed(2)}`;
+            
+            // ALUTH: totalSavings eka allSavings walinma calculate karamu (period eka nethuwa)
+            const allTimeSavings = allSavings.reduce((sum, s) => sum + (s.amount || 0), 0);
+            totalSavingsEl.textContent = `LKR ${allTimeSavings.toFixed(2)}`;
+            
+            netProfitEl.textContent = `LKR ${netProfit.toFixed(2)}`;
+            netProfitEl.classList.toggle('text-red-600', netProfit < 0);
+            netProfitEl.classList.toggle('text-blue-600', netProfit >= 0);
+            
+            renderTransactionTable(filteredTransactions);
+            updateCharts(totalIncome, totalExpense, projectIncome, manualIncome, filteredSavings);
+        }
+        
+        // 3. Render Transaction Table
+        function renderTransactionTable(transactions) {
+            transactionTableBody.innerHTML = '';
+            if (transactions.length === 0) {
+                transactionTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-10">No transactions for this period.</td></tr>';
+                return;
+            }
+            
+            transactions.sort((a, b) => (b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0) - (a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0));
+            
+            transactions.forEach(t => {
+                const tr = document.createElement('tr');
+                const date = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleDateString('en-CA') : 'N/A';
+                const isIncome = t.type === 'income';
+                
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${t.description}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${isIncome ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${t.source === 'project' ? 'Project' : (t.source || 'manual')}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        ${t.slipUrl ? `<a href="${t.slipUrl}" target="_blank" class="text-purple-600 hover:underline">View Slip</a>` : 'N/A'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium ${isIncome ? 'text-green-600' : 'text-red-600'}">
+                        ${isIncome ? '+' : '-'} LKR ${(t.amount || 0).toFixed(2)}
+                    </td>
+                `;
+                transactionTableBody.appendChild(tr);
+            });
+        }
+        
+        // 4. Update Charts
+        function updateCharts(totalIncome, totalExpense, projectIncome, manualIncome, savingsData) {
+            // Bar Chart
+            if(document.getElementById('incomeExpenseBarChart')) {
+                const barCtx = document.getElementById('incomeExpenseBarChart').getContext('2d');
+                if(chartBar) chartBar.destroy();
+                chartBar = new Chart(barCtx, {
+                    type: 'bar', data: { labels: ['Income', 'Expense'], datasets: [{ label: 'Amount (LKR)', data: [totalIncome, totalExpense], backgroundColor: ['#22c55e', '#ef4444'], barThickness: 50, borderRadius: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+                });
+            }
+            
+            // Pie Chart
+            if(document.getElementById('incomePieChart')) {
+                const pieCtx = document.getElementById('incomePieChart').getContext('2d');
+                if(chartPie) chartPie.destroy();
+                chartPie = new Chart(pieCtx, {
+                    type: 'pie', data: { labels: ['Project Income', 'Manual Income'], datasets: [{ data: [projectIncome, manualIncome], backgroundColor: ['#8b5cf6', '#a78bfa'] }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } } }
+                });
+            }
+            
+            // Line Chart (Savings)
+            if(document.getElementById('savingsLineChart')) {
+                const lineCtx = document.getElementById('savingsLineChart').getContext('2d');
+                if(chartLine) chartLine.destroy();
+                
+                // WENAS KALA: Savings chart ekata all savings data yawamu
+                const allTimeSavingsSorted = [...allSavings].sort((a, b) => (a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0) - (b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0));
+                
+                let cumulativeSaving = 0;
+                const chartLabels = allTimeSavingsSorted.map(s => s.createdAt.toDate ? s.createdAt.toDate().toLocaleDateString('en-CA') : '');
+                const chartData = allTimeSavingsSorted.map(s => { cumulativeSaving += (s.amount || 0); return cumulativeSaving; });
+                
+                chartLine = new Chart(lineCtx, {
+                    type: 'line', data: { labels: chartLabels, datasets: [{ label: 'Total Savings', data: chartData, backgroundColor: 'rgba(124, 58, 237, 0.1)', borderColor: '#7c3aed', fill: true, tension: 0.3 }] },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+                });
+            }
+        }
+        
+        // 5. Upload Slip Function
+        async function uploadSlip(file) {
+            const formData = new FormData();
+            formData.append('key', IMG_API_KEY);
+            formData.append('image', file);
+            try {
+                const response = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.success) return result.data.url;
+                else throw new Error(result.error.message);
+            } catch (error) {
+                console.error("Error uploading file:", error);
+                return null;
+            }
+        }
+        
+        // === Modal & Form Logic ===
+        
+        function openTransactionModal(type) {
+            transactionForm.reset();
+            document.getElementById('transactionType').value = type;
+            if (type === 'income') {
+                modalTitle.textContent = "Add Manual Income";
+                saveTransactionBtn.className = saveTransactionBtn.className.replace(/bg-purple-600|bg-red-600/, 'bg-green-600');
+            } else {
+                modalTitle.textContent = "Add Manual Expense";
+                saveTransactionBtn.className = saveTransactionBtn.className.replace(/bg-purple-600|bg-green-600/, 'bg-red-600');
+            }
+            transactionModal.classList.remove('hidden');
+        }
+        
+        // === FIX: SLIP OPTIONAL LOGIC ===
+        transactionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!activeProfile) return;
+            
+            saveTransactionBtn.disabled = true;
+            saveTransactionBtn.textContent = 'Saving...';
+
+            const slipFile = document.getElementById('transactionSlip').files[0];
+            let slipUrl = null;
+
+            try {
+                // 1. Slip eka thiyenawanam witharak upload karamu
+                if (slipFile) {
+                    saveTransactionBtn.textContent = 'Uploading Slip...';
+                    slipUrl = await uploadSlip(slipFile);
+                    if (!slipUrl) {
+                        // Upload fail unoth, process eka nawaththamu
+                        throw new Error("Slip upload failed. Please try again or remove the file.");
+                    }
+                }
+                
+                saveTransactionBtn.textContent = 'Saving...';
+
+                // 2. Transaction data eka hadamu
+                const transactionData = {
+                    type: document.getElementById('transactionType').value,
+                    description: document.getElementById('transactionDesc').value,
+                    amount: parseFloat(document.getElementById('transactionAmount').value),
+                    slipUrl: slipUrl, // Upload unoth URL eka, nathnam null
+                    source: 'manual',
+                    createdAt: serverTimestamp()
+                };
+                
+                // 3. Firestore ekata save karamu
+                const transactionPath = `/artifacts/${appId}/profiles/${activeProfile}/transactions`;
+                await addDoc(collection(db, transactionPath), transactionData);
+                transactionModal.classList.add('hidden');
+
+            } catch (error) {
+                console.error("Error saving transaction:", error);
+                alert(error.message); // Error eka user ta pennamu
+            } finally {
+                saveTransactionBtn.disabled = false;
+                saveTransactionBtn.textContent = 'Save';
+            }
+        });
+
+        function openSavingModal() {
+            savingForm.reset();
+            savingModal.classList.remove('hidden');
+        }
+        
+        savingForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!activeProfile) return;
+            saveSavingBtn.disabled = true;
+            saveSavingBtn.textContent = 'Saving...';
+            
+            const savingData = {
+                amount: parseFloat(document.getElementById('savingAmount').value),
+                description: document.getElementById('savingDesc').value,
+                type: 'manual',
+                createdAt: serverTimestamp()
+            };
+            
+            try {
+                // === ALUTH PATH ===
+                const savingPath = `/artifacts/${appId}/profiles/${activeProfile}/savings`;
+                await addDoc(collection(db, savingPath), savingData);
+                savingModal.classList.add('hidden');
+            } catch (error) {
+                console.error("Error saving saving:", error);
+                alert("Error saving data.");
+            } finally {
+                saveSavingBtn.disabled = false;
+                saveSavingBtn.textContent = 'Save Saving';
+            }
+        });
+        
+        autoSaveForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!activeProfile) return;
+            const percentage = parseFloat(autoSavePercentageInput.value) || 0;
+            // === ALUTH PATH ===
+            const settingsPath = `/artifacts/${appId}/profiles/${activeProfile}/settings/main`;
+            try {
+                await setDoc(doc(db, settingsPath), { autoSavePercentage: percentage }, { merge: true });
+                alert("Saving percentage saved!");
+            } catch (error) {
+                console.error("Error saving settings:", error);
+            }
+        });
+        
+        runAutoSaveBtn.addEventListener('click', async () => {
+            if (!activeProfile) return;
+            const profitText = netProfitEl.textContent.replace('LKR ', '');
+            const currentProfit = parseFloat(profitText) || 0;
+            const percentage = settings.autoSavePercentage || 0;
+            
+            if (currentProfit <= 0) {
+                alert("No profit in this period to save.");
+                return;
+            }
+            if (percentage <= 0) {
+                alert("Please set a saving percentage first.");
+                return;
+            }
+            
+            const amountToSave = (currentProfit * percentage) / 100;
+            
+            if (confirm(`This will save ${percentage}% of your profit (LKR ${amountToSave.toFixed(2)}) to savings. Proceed?`)) {
+                const savingData = {
+                    amount: amountToSave,
+                    description: `Auto-save (${percentage}%) of ${monthFilter.options[monthFilter.selectedIndex].text} profit`,
+                    type: 'auto',
+                    createdAt: serverTimestamp()
+                };
+                try {
+                    // === ALUTH PATH ===
+                    const savingPath = `/artifacts/${appId}/profiles/${activeProfile}/savings`;
+                    await addDoc(collection(db, savingPath), savingData);
+                    alert("Auto-save successful!");
+                } catch (error) {
+                    console.error("Error auto-saving:", error);
+                }
+            }
+        });
+
+        // Modal Close Buttons
+        addIncomeBtn.addEventListener('click', () => openTransactionModal('income'));
+        addExpenseBtn.addEventListener('click', () => openTransactionModal('expense'));
+        addSavingBtn.addEventListener('click', openSavingModal);
+        
+        document.querySelectorAll('.closeModalBtn, .cancelModalBtn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                transactionModal.classList.add('hidden');
+                savingModal.classList.add('hidden');
+            });
+        });
+        
+        // Mobile Chart Tab Logic
+        chartTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                chartTabs.forEach(t => t.classList.remove('chart-tab-active'));
+                chartWrappers.forEach(w => w.classList.add('hidden'));
+                
+                tab.classList.add('chart-tab-active');
+                const chartId = tab.dataset.chart;
+                document.getElementById(chartId).classList.remove('hidden');
+            });
+        });
+
+    </script>
+</body>
+</html>

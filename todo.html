@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List - Applify</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* bg-slate-50 */
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        
+        /* ALUTH: Mobile menu slide-in */
+        #mobileMenu.hidden {
+            transform: translateX(-100%);
+        }
+        #mobileMenu {
+            transition: transform 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+
+    <div id="menuBackdrop" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-20 hidden md:hidden"></div>
+
+    <aside class="w-64 bg-white flex-shrink-0 flex-col border-r border-gray-200 hidden md:flex">
+        <div class="h-20 flex items-center px-8">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-600"><path d="M12 3a9 9 0 0 1 9 9 9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9z"></path><path d="M9 9a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3v0a3 3 0 0 1-3-3z"></path><path d="M9 15a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3v0a3 3 0 0 1-3-3z"></path></svg>
+            <span class="text-2xl font-bold text-gray-800 ml-3">Applify.</span>
+        </div>
+
+        <nav id="sidebarNav" class="flex-1 px-4 py-4 space-y-2"> 
+            <a href="index.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                <span class="ml-3">Dashboard</span>
+            </a>
+            <a href="client.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0115 11v-1a1 1 0 00-1-1h-4a1 1 0 00-1 1v1a5 5 0 013.43 1.67A6.97 6.97 0 009 16c0 .34.024.673.07 1H4a2 2 0 00-2 2v1a1 1 0 001 1h14a1 1 0 001-1v-1a2 2 0 00-2-2h-5.07z" /></svg>
+                <span class="ml-3">Clients</span>
+            </a>
+            <a href="projects.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                <span class="ml-3">Projects</span>
+            </a>
+            <a href="income-expense.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg>
+                <span class="ml-3">Income & Expense</span>
+            </a>
+            <a href="invoice-generator.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                <span class="ml-3">Invoice Generator</span>
+            </a>
+
+            <a href="todo.html" class="nav-link flex items-center px-4 py-3 text-purple-600 bg-purple-50 rounded-lg font-semibold relative">
+                <div class="absolute left-0 top-0 h-full w-1 bg-purple-600 rounded-r-full"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <span class="ml-3">To-Do List</span>
+            </a>
+            
+            <a href="otherincomes.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <span class="ml-3">Other Incomes</span>
+            </a>
+            
+             <a href="#" id="logoutButton" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                <span class="ml-3">Logout</span>
+            </a>
+        </nav>
+        
+        <div class="p-6 mt-auto">
+            <div class="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-2xl p-6 text-white text-center shadow-lg">
+                <img src="https://placehold.co/150x100/ffffff/a78bfa?text=Premium+Feature" 
+                     onerror="this.src='https://placehold.co/150x100/ffffff/a78bfa?text=Premium+Feature'" 
+                     alt="Upgrade to Premium" 
+                     class="mx-auto -mt-12 rounded-lg" style="width: 120px; height: 80px; object-fit: cover;">
+                <p class="font-semibold mt-4">Upgrade to Premium</p>
+                <p class="text-xs text-purple-100 mt-1 mb-4">Go Pro to unlock more features</p>
+                <button class="w-full bg-white text-purple-600 font-bold py-2 px-4 rounded-lg shadow-md hover:bg-gray-100 transition-colors">
+                    Upgrade
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <aside id="mobileMenu" class="fixed inset-y-0 left-0 w-64 bg-white flex-shrink-0 flex flex-col border-r border-gray-200 z-30 hidden transform -translate-x-full md:hidden">
+        <div class="h-20 flex items-center px-8">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-600"><path d="M12 3a9 9 0 0 1 9 9 9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9z"></path><path d="M9 9a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3v0a3 3 0 0 1-3-3z"></path><path d="M9 15a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3v0a3 3 0 0 1-3-3z"></path></svg>
+            <span class="text-2xl font-bold text-gray-800 ml-3">Applify.</span>
+        </div>
+        <nav id="mobileSidebarNav" class="flex-1 px-4 py-4 space-y-2">
+            <a href="index.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                <span class="ml-3">Dashboard</span>
+            </a>
+            <a href="client.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0115 11v-1a1 1 0 00-1-1h-4a1 1 0 00-1 1v1a5 5 0 013.43 1.67A6.97 6.97 0 009 16c0 .34.024.673.07 1H4a2 2 0 00-2 2v1a1 1 0 001 1h14a1 1 0 001-1v-1a2 2 0 00-2-2h-5.07z" /></svg>
+                <span class="ml-3">Clients</span>
+            </a>
+            <a href="projects.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                <span class="ml-3">Projects</span>
+            </a>
+            <a href="income-expense.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg>
+                <span class="ml-3">Income & Expense</span>
+            </a>
+            <a href="invoice-generator.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                <span class="ml-3">Invoice Generator</span>
+            </a>
+            <a href="todo.html" class="nav-link flex items-center px-4 py-3 text-purple-600 bg-purple-50 rounded-lg font-semibold relative">
+                <div class="absolute left-0 top-0 h-full w-1 bg-purple-600 rounded-r-full"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <span class="ml-3">To-Do List</span>
+            </a>
+            <a href="otherincomes.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <span class="ml-3">Other Incomes</span>
+            </a>
+            <a href="#" id="mobileLogoutButton" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                <span class="ml-3">Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto pb-20" style="height: 100vh;">
+        
+        <header class="flex justify-between items-center mb-8">
+            <button id="menuOpenBtn" class="md:hidden text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+            
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">To-Do List (Common)</h1> 
+            
+            <div class="flex items-center space-x-6">
+                <button class="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 hidden md:block">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                </button>
+                <button class="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                    <span class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+                </button>
+                <img class="w-10 h-10 rounded-full cursor-pointer hidden md:block" 
+                     src="https://placehold.co/40x40/EADCFB/5B21B6?text=CJ" 
+                     onerror="this.src='https://placehold.co/40x40/EADCFB/5B21B6?text=CJ'" 
+                     alt="Candace Jules">
+            </div>
+        </header>
+
+        <form id="todoForm" class="mb-6 flex flex-col md:flex-row gap-4">
+            <input type="text" id="todoInput" placeholder="Add a new note or task..." class="flex-1 bg-white rounded-lg py-3 px-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-300 shadow-sm border border-gray-200" required>
+            <button type="submit" id="addTodoBtn" class="flex items-center justify-center bg-purple-600 text-white px-5 py-3 rounded-lg text-sm font-medium hover:bg-purple-700 shadow-md transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                Add Note
+            </button>
+        </form>
+
+        <div id="todoListContainer" class="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div class="p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Your Notes</h2>
+                <div id="todoList" class="space-y-4">
+                    <div class="text-center text-gray-500 py-10">
+                        <div class="flex justify-center items-center space-x-2">
+                            <svg class="animate-spin h-5 w-5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Loading notes...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+    
+    <footer class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-10">
+        <nav class="flex justify-around items-center h-16">
+            <a href="index.html" class="nav-link flex flex-col items-center justify-center text-gray-500 hover:text-purple-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                <span class="text-xs font-medium">Home</span>
+            </a>
+            <a href="client.html" class="nav-link flex flex-col items-center justify-center text-gray-500 hover:text-purple-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0115 11v-1a1 1 0 00-1-1h-4a1 1 0 00-1 1v1a5 5 0 013.43 1.67A6.97 6.97 0 009 16c0 .34.024.673.07 1H4a2 2 0 00-2 2v1a1 1 0 001 1h14a1 1 0 001-1v-1a2 2 0 00-2-2h-5.07z" />
+                </svg>
+                <span class="text-xs font-medium">Clients</span>
+            </a>
+            <a href="todo.html" class="nav-link flex flex-col items-center justify-center text-purple-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <span class="text-xs font-medium">To-Do</span>
+            </a>
+            <a href="income-expense.html" class="nav-link flex flex-col items-center justify-center text-gray-500 hover:text-purple-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                </svg>
+                <span class="text-xs font-medium">Income</span>
+            </a>
+        </nav>
+    </footer>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        
+        // === ALUTH IMPORT ===
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            setPersistence, 
+            browserSessionPersistence, 
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        
+        import { 
+            getFirestore, 
+            setLogLevel,
+            collection,
+            addDoc,
+            doc,
+            deleteDoc,
+            onSnapshot,
+            query,
+            serverTimestamp 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // === GLOBAL VARIABLES ===
+        const firebaseConfigFromUser = {
+            apiKey: "AIzaSyCJGW3-flCwC5y8WXJCJWDvx36eEkw_I5o",
+            authDomain: "pixora-872e3.firebaseapp.com",
+            projectId: "pixora-872e3",
+            storageBucket: "pixora-872e3.firebasestorage.app",
+            messagingSenderId: "315709334461",
+            appId: "1:315709334461:web:a758b041e43837df6d68d4",
+            measurementId: "G-C7J0ZGKR1M"
+        };
+        
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : firebaseConfigFromUser;
+
+        let app, auth, db;
+        
+        // App State
+        let currentUserId = null;
+        let activeProfile = null; // <-- ALUTH
+        let todoCollectionRef = null;
+        let todoUnsubscribe = null;
+
+        // === DOM Elements ===
+        const todoForm = document.getElementById('todoForm');
+        const todoInput = document.getElementById('todoInput');
+        const addTodoBtn = document.getElementById('addTodoBtn');
+        const todoList = document.getElementById('todoList');
+        const logoutButton = document.getElementById('logoutButton');
+        const mobileLogoutButton = document.getElementById('mobileLogoutButton'); // ALUTH
+
+        // ALUTH: Mobile Menu Elements
+        const menuOpenBtn = document.getElementById('menuOpenBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const menuBackdrop = document.getElementById('menuBackdrop');
+
+        // WENAS KALA: Sidebar Link Update Function එක client.html එකෙන් ගත්තා
+        function updateSidebarLinks(profileName) {
+            if (!profileName) return;
+            
+            const navLinks = document.querySelectorAll('.nav-link'); 
+            
+            navLinks.forEach(link => {
+                const originalHref = link.getAttribute('href')?.split('?')[0]; 
+                if (originalHref && originalHref !== '#' && originalHref !== '#logoutButton') {
+                    link.href = `${originalHref}?profile=${profileName}`;
+                }
+            });
+            
+            const navs = [document.getElementById('sidebarNav'), document.getElementById('mobileSidebarNav')];
+            navs.forEach(sidebarNav => {
+                if (!sidebarNav) return;
+                
+                const existingSettings = sidebarNav.querySelector('a[href^="settings.html"]');
+                if (existingSettings) existingSettings.remove();
+
+                const logoutBtn = sidebarNav.querySelector('a[href="#logoutButton"]');
+                
+                const settingsLink = document.createElement('a');
+                settingsLink.href = `settings.html?profile=${profileName}`;
+                settingsLink.className = "nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium";
+                settingsLink.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span class="ml-3">Settings</span>
+                `;
+                if(logoutBtn) {
+                    sidebarNav.insertBefore(settingsLink, logoutBtn);
+                }
+            });
+        }
+
+
+        // === Firebase Initialization ===
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            setLogLevel('debug'); 
+            
+            await setPersistence(auth, browserSessionPersistence);
+
+            // === ALUTH: Get Profile from URL ===
+            const urlParams = new URLSearchParams(window.location.search);
+            activeProfile = urlParams.get('profile');
+            if (!activeProfile) {
+                console.log("No profile in URL. Redirecting to login.");
+                window.location.href = 'index.html';
+            }
+            // ==================================
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUserId = user.uid;
+                    
+                    // === WENAS KALA: Database Path ===
+                    // Path eka /artifacts/${appId}/common/todos (4 segments) indala
+                    // /artifacts/${appId}/app_data/common/todos (5 segments) walata wenas kala
+                    const todoCollectionPath = `/artifacts/${appId}/app_data/common/todos`;
+                    todoCollectionRef = collection(db, todoCollectionPath);
+                    
+                    listenForTodos();
+                    
+                    // === ALUTH: Sidebar links update karanna ===
+                    updateSidebarLinks(activeProfile);
+                    
+                } else {
+                    currentUserId = null;
+                    if(todoUnsubscribe) todoUnsubscribe();
+                    todoList.innerHTML = '<div class="text-center text-gray-500 py-10">Please sign in to see your notes.</div>';
+                    window.location.href = 'index.html';
+                }
+            });
+
+            // WENAS KALA: Logout button dekama handle karanna
+            const handleLogout = async (e) => {
+                e.preventDefault();
+                await signOut(auth);
+            };
+            logoutButton.addEventListener('click', handleLogout);
+            mobileLogoutButton.addEventListener('click', handleLogout); // ALUTH
+
+        } catch (error) {
+            console.error("Error initializing Firebase:", error);
+            todoList.innerHTML = `<div class="text-center text-red-500 py-10">Firebase connection error: ${error.message}</div>`;
+        }
+
+        // ALUTH: Mobile Menu Toggle Logic
+        menuOpenBtn.addEventListener('click', () => {
+            mobileMenu.classList.remove('hidden');
+            setTimeout(() => mobileMenu.classList.remove('-translate-x-full'), 10);
+            menuBackdrop.classList.remove('hidden');
+        });
+
+        const closeMenu = () => {
+            mobileMenu.classList.add('-translate-x-full');
+            menuBackdrop.classList.add('hidden');
+            setTimeout(() => mobileMenu.classList.add('hidden'), 300);
+        };
+        
+        menuBackdrop.addEventListener('click', closeMenu);
+        mobileMenu.addEventListener('click', (e) => {
+            if (e.target.closest('a')) {
+                closeMenu();
+            }
+        });
+
+        // === To-Do Functions ===
+
+        // 1. Listen for To-Do Items
+        function listenForTodos() {
+            if (!todoCollectionRef) return;
+            if(todoUnsubscribe) todoUnsubscribe();
+            
+            todoUnsubscribe = onSnapshot(todoCollectionRef, (snapshot) => {
+                const todos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderTodoList(todos);
+            }, (error) => {
+                console.error("Error listening to to-dos:", error);
+                // ALUTH: Error eka pennanna
+                todoList.innerHTML = `<div class="text-center text-red-500 py-10">Error loading data. Check console.</div>`;
+            });
+        }
+
+        // 2. Render To-Do List
+        function renderTodoList(todos) {
+            todoList.innerHTML = ''; // List eka clear karamu
+            
+            if (todos.length === 0) {
+                todoList.innerHTML = '<div class="text-center text-gray-500 py-10">No notes added yet.</div>';
+                return;
+            }
+
+            // Sort by createdAt (aluth ewa udatama)
+            todos.sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
+
+            todos.forEach(todo => {
+                const todoItem = document.createElement('div');
+                todoItem.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200';
+                
+                const date = todo.createdAt?.toDate ? todo.createdAt.toDate().toLocaleDateString('en-CA', { dateStyle: 'short', timeStyle: 'short' }) : '';
+                
+                todoItem.innerHTML = `
+                    <div>
+                        <p class="text-sm font-medium text-gray-800">${todo.text}</p>
+                        <p class="text-xs text-gray-500 mt-1">${date}</p>
+                    </div>
+                    <button class="delete-btn text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100" data-id="${todo.id}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                `;
+                todoList.appendChild(todoItem);
+            });
+
+            // Delete buttons walata listeners add karamu
+            todoList.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', handleDeleteTodo);
+            });
+        }
+
+        // 3. Add To-Do
+        todoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const todoText = todoInput.value.trim();
+            
+            if (todoText === "" || !todoCollectionRef) return;
+
+            addTodoBtn.disabled = true;
+
+            const todoData = {
+                text: todoText,
+                createdAt: serverTimestamp()
+            };
+
+            try {
+                await addDoc(todoCollectionRef, todoData);
+                todoInput.value = '';
+            } catch (error) {
+                console.error("Error adding to-do:", error);
+            } finally {
+                addTodoBtn.disabled = false;
+            }
+        });
+
+        // 4. Delete To-Do
+        async function handleDeleteTodo(e) {
+            const todoId = e.currentTarget.dataset.id;
+            if (!todoId || !todoCollectionRef) return;
+            
+            e.currentTarget.disabled = true;
+            
+            try {
+                await deleteDoc(doc(db, todoCollectionRef.path, todoId));
+            } catch (error) {
+                console.error("Error deleting to-do:", error);
+                e.currentTarget.disabled = false;
+            }
+        }
+
+    </script>
+</body>
+</html>
