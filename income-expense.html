@@ -91,7 +91,7 @@
             </a>
             <a href="todo.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
                 <span class="ml-3">To-Do List</span>
             </a>
@@ -152,7 +152,7 @@
             </a>
             <a href="todo.html" class="nav-link flex items-center px-4 py-3 text-gray-500 hover:bg-gray-100 hover:text-gray-700 rounded-lg font-medium">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
                 <span class="ml-3">To-Do List</span>
             </a>
@@ -210,6 +210,17 @@
             <div class="bg-white p-6 rounded-2xl shadow-sm">
                 <p class="text-sm font-medium text-gray-500">Total Savings</p>
                 <p id="totalSavings" class="text-3xl font-bold text-purple-600 mt-1">LKR 0.00</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm">
+                <div class="flex justify-between items-center">
+                    <p class="text-sm font-medium text-gray-500">Available Balance</p>
+                    <button id="addBalanceBtn" class="text-purple-600 hover:bg-purple-100 p-1 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+                <p id="totalBalance" class="text-3xl font-bold text-gray-900 mt-1">LKR 0.00</p>
             </div>
         </div>
 
@@ -287,6 +298,7 @@
                         <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Type</th>
                         <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Slip</th>
                         <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="transactionTableBody" class="bg-white divide-y divide-gray-200">
@@ -394,6 +406,37 @@
         </div>
     </div>
 
+    <div id="balanceModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 modal-backdrop overflow-y-auto h-full w-full flex items-center justify-center hidden z-40">
+        <div class="relative mx-auto p-6 border w-full max-w-lg shadow-lg rounded-2xl bg-white m-4">
+            <form id="balanceForm">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold text-gray-800">Add to Balance</h3>
+                    <button type="button" class="closeModalBtn text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label for="balanceAmount" class="block text-sm font-medium text-gray-700 mb-1">Amount (LKR)</label>
+                        <input type="number" id="balanceAmount" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-300" required>
+                    </div>
+                    <div>
+                        <label for="balanceDesc" class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                        <input type="text" id="balanceDesc" placeholder="e.g., Initial Balance, Deposit" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-300">
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button type="button" class="cancelModalBtn bg-gray-100 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-200 shadow-sm mr-3">
+                        Cancel
+                    </button>
+                    <button type="submit" id="saveBalanceBtn" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 shadow-md flex items-center justify-center min-w-[120px]">
+                        Add to Balance
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -417,7 +460,9 @@
             onSnapshot,
             query,
             where,
-            serverTimestamp 
+            serverTimestamp,
+            updateDoc,  // <-- ALUTH
+            deleteDoc   // <-- ALUTH
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // === GLOBAL VARIABLES ===
@@ -441,9 +486,11 @@
         let currentUserId = null;
         let activeProfile = null; // <-- ALUTH
         let allProjects = [], allTransactions = [], allSavings = [];
+        let allBalanceEntries = []; // <-- ALUTH
         let settings = { autoSavePercentage: 0 };
-        let unsubscribe = { projects: null, transactions: null, savings: null, settings: null };
+        let unsubscribe = { projects: null, transactions: null, savings: null, settings: null, balance: null }; // <-- ALUTH
         let currentMonth, currentYear;
+        let currentEditId = null; // <-- ALUTH (Track කරන්නෙ edit එකක්ද add එකක්ද කියලා)
         
         // Chart Instances
         let chartBar, chartPie, chartLine;
@@ -455,6 +502,7 @@
         const totalExpenseEl = document.getElementById('totalExpense');
         const netProfitEl = document.getElementById('netProfit');
         const totalSavingsEl = document.getElementById('totalSavings');
+        const totalBalanceEl = document.getElementById('totalBalance'); // <-- ALUTH
         
         const addIncomeBtn = document.getElementById('addIncomeBtn');
         const addExpenseBtn = document.getElementById('addExpenseBtn');
@@ -468,6 +516,11 @@
         const savingModal = document.getElementById('savingModal');
         const savingForm = document.getElementById('savingForm');
         const saveSavingBtn = document.getElementById('saveSavingBtn');
+        
+        const balanceModal = document.getElementById('balanceModal'); // <-- ALUTH
+        const balanceForm = document.getElementById('balanceForm'); // <-- ALUTH
+        const saveBalanceBtn = document.getElementById('saveBalanceBtn'); // <-- ALUTH
+        const addBalanceBtn = document.getElementById('addBalanceBtn'); // <-- ALUTH
         
         const autoSaveForm = document.getElementById('autoSaveForm');
         const autoSavePercentageInput = document.getElementById('autoSavePercentage');
@@ -631,6 +684,7 @@
             const transactionPath = `/artifacts/${appId}/profiles/${activeProfile}/transactions`;
             const savingPath = `/artifacts/${appId}/profiles/${activeProfile}/savings`;
             const settingsPath = `/artifacts/${appId}/profiles/${activeProfile}/settings/main`;
+            const balancePath = `/artifacts/${appId}/profiles/${activeProfile}/balanceEntries`; // <-- ALUTH
 
             Object.values(unsubscribe).forEach(unsub => unsub && unsub());
 
@@ -661,9 +715,15 @@
                     console.log("No settings doc, using defaults.");
                 }
             });
+
+            // ALUTH: Listen for Balance Entries (Profile-specific)
+            unsubscribe.balance = onSnapshot(collection(db, balancePath), (snapshot) => {
+                allBalanceEntries = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+                updateDashboard();
+            });
         }
 
-        // 2. Main Dashboard Update Function
+        // 2. Main Dashboard Update Function (WENAS KALA)
         function updateDashboard() {
             const selectedMonth = monthFilter.value;
             const selectedYear = yearFilter.value;
@@ -681,32 +741,48 @@
             const filteredTransactions = allTransactions.filter(filterDate);
             const filteredSavings = allSavings.filter(filterDate);
 
-            // Calculate Stats
-            const projectIncome = filteredTransactions // <-- FIX: Projects walin nemei, transactions walin ganna one
+            // --- ALUTH: Calculate All-Time Stats for Balance ---
+            const allTimeIncome = allTransactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + (t.amount || 0), 0);
+                
+            const allTimeExpense = allTransactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + (t.amount || 0), 0);
+                
+            const allTimeSavings = allSavings
+                .reduce((sum, s) => sum + (s.amount || 0), 0);
+                
+            const allTimeDeposits = allBalanceEntries
+                .reduce((sum, b) => sum + (b.amount || 0), 0);
+
+            const availableBalance = (allTimeDeposits + allTimeIncome) - allTimeExpense - allTimeSavings;
+            totalBalanceEl.textContent = `LKR ${availableBalance.toFixed(2)}`;
+            // --- (ALUTH දේවල් ඉවරයි) ---
+
+
+            // --- Calculate Period Stats (This Period) ---
+            const projectIncome = filteredTransactions
                 .filter(t => t.type === 'income' && t.source === 'project')
                 .reduce((sum, t) => sum + (t.amount || 0), 0);
-                
+                    
             const manualIncome = filteredTransactions
-                .filter(t => t.type === 'income' && t.source !== 'project') // <-- 'project' nathi ewa
+                .filter(t => t.type === 'income' && t.source !== 'project') 
                 .reduce((sum, t) => sum + (t.amount || 0), 0);
-                
+                    
             const totalIncome = projectIncome + manualIncome;
 
             const totalExpense = filteredTransactions
                 .filter(t => t.type === 'expense')
                 .reduce((sum, t) => sum + (t.amount || 0), 0);
-                
+                    
             const netProfit = totalIncome - totalExpense;
-            
-            const totalSavings = filteredSavings.reduce((sum, s) => sum + (s.amount || 0), 0);
 
             // Update Stat Cards
             totalIncomeEl.textContent = `LKR ${totalIncome.toFixed(2)}`;
             totalExpenseEl.textContent = `LKR ${totalExpense.toFixed(2)}`;
-            totalSavingsEl.textContent = `LKR ${totalSavings.toFixed(2)}`;
             
-            // ALUTH: totalSavings eka allSavings walinma calculate karamu (period eka nethuwa)
-            const allTimeSavings = allSavings.reduce((sum, s) => sum + (s.amount || 0), 0);
+            // totalSavingsEl eka all-time savings walin update karamu
             totalSavingsEl.textContent = `LKR ${allTimeSavings.toFixed(2)}`;
             
             netProfitEl.textContent = `LKR ${netProfit.toFixed(2)}`;
@@ -717,11 +793,12 @@
             updateCharts(totalIncome, totalExpense, projectIncome, manualIncome, filteredSavings);
         }
         
-        // 3. Render Transaction Table
+        // 3. Render Transaction Table (WENAS KALA)
         function renderTransactionTable(transactions) {
             transactionTableBody.innerHTML = '';
             if (transactions.length === 0) {
-                transactionTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-10">No transactions for this period.</td></tr>';
+                // ALUTH: Colspan eka 6 karanna (Action column eka nisa)
+                transactionTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-10">No transactions for this period.</td></tr>';
                 return;
             }
             
@@ -731,6 +808,9 @@
                 const tr = document.createElement('tr');
                 const date = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleDateString('en-CA') : 'N/A';
                 const isIncome = t.type === 'income';
+                
+                // Project income edit/delete කරන්න බෑ
+                const isManual = t.source !== 'project'; 
                 
                 tr.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${t.description}</td>
@@ -745,6 +825,18 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium ${isIncome ? 'text-green-600' : 'text-red-600'}">
                         ${isIncome ? '+' : '-'} LKR ${(t.amount || 0).toFixed(2)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        ${isManual ? `
+                            <button class="edit-btn text-purple-600 hover:text-purple-900" data-id="${t.id}">
+                                Edit
+                            </button>
+                            <button class="delete-btn text-red-600 hover:text-red-900 ml-4" data-id="${t.id}">
+                                Delete
+                            </button>
+                        ` : `
+                            <span class="text-xs text-gray-400">Project</span>
+                        `}
                     </td>
                 `;
                 transactionTableBody.appendChild(tr);
@@ -810,8 +902,10 @@
         
         // === Modal & Form Logic ===
         
+        // WENAS KALA
         function openTransactionModal(type) {
             transactionForm.reset();
+            currentEditId = null; // <-- ALUTH: Edit mode eka reset karanna
             document.getElementById('transactionType').value = type;
             if (type === 'income') {
                 modalTitle.textContent = "Add Manual Income";
@@ -820,10 +914,16 @@
                 modalTitle.textContent = "Add Manual Expense";
                 saveTransactionBtn.className = saveTransactionBtn.className.replace(/bg-purple-600|bg-green-600/, 'bg-red-600');
             }
+            document.getElementById('transactionSlip').value = null; // File input eka clear karanna
+            
+            // ALUTH: Slip eka optional kiyana eka edit waladi wenas karanna
+            const slipText = document.querySelector('label[for="transactionSlip"] + p');
+            if(slipText) slipText.textContent = "You can optionally attach a slip.";
+
             transactionModal.classList.remove('hidden');
         }
         
-        // === FIX: SLIP OPTIONAL LOGIC ===
+        // === WENAS KALA: Add/Edit Submit Logic ===
         transactionForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!activeProfile) return;
@@ -833,41 +933,69 @@
 
             const slipFile = document.getElementById('transactionSlip').files[0];
             let slipUrl = null;
+            let isUploading = false; // Track karanawa aluth slip ekak upload karada kiyala
 
             try {
-                // 1. Slip eka thiyenawanam witharak upload karamu
+                // 1. Aluth slip ekak thiyenawanam witharak upload karamu
                 if (slipFile) {
+                    isUploading = true;
                     saveTransactionBtn.textContent = 'Uploading Slip...';
                     slipUrl = await uploadSlip(slipFile);
                     if (!slipUrl) {
-                        // Upload fail unoth, process eka nawaththamu
                         throw new Error("Slip upload failed. Please try again or remove the file.");
                     }
                 }
                 
                 saveTransactionBtn.textContent = 'Saving...';
 
-                // 2. Transaction data eka hadamu
-                const transactionData = {
-                    type: document.getElementById('transactionType').value,
-                    description: document.getElementById('transactionDesc').value,
-                    amount: parseFloat(document.getElementById('transactionAmount').value),
-                    slipUrl: slipUrl, // Upload unoth URL eka, nathnam null
-                    source: 'manual',
-                    createdAt: serverTimestamp()
-                };
-                
-                // 3. Firestore ekata save karamu
-                const transactionPath = `/artifacts/${appId}/profiles/${activeProfile}/transactions`;
-                await addDoc(collection(db, transactionPath), transactionData);
+                // 2. Data eka hadamu
+                const type = document.getElementById('transactionType').value;
+                const description = document.getElementById('transactionDesc').value;
+                const amount = parseFloat(document.getElementById('transactionAmount').value);
+
+                if (currentEditId) {
+                    // --- UPDATE LOGIC (ALUTH) ---
+                    const docRef = doc(db, `/artifacts/${appId}/profiles/${activeProfile}/transactions`, currentEditId);
+                    
+                    const updatedData = {
+                        type: type,
+                        description: description,
+                        amount: amount,
+                    };
+
+                    if (isUploading) {
+                        updatedData.slipUrl = slipUrl; // Aluth slip URL eka daanna
+                    } 
+                    // isUploading false nam, updatedData object ekata slipUrl eka yanne ne.
+                    // E nisa Firestore eke thiyena PARANA slipUrl eka overwrite wenne ne.
+
+                    await updateDoc(docRef, updatedData);
+
+                } else {
+                    // --- ADD NEW LOGIC (ඔයාගෙ පරණ code එක) ---
+                    const transactionData = {
+                        type: type,
+                        description: description,
+                        amount: amount,
+                        slipUrl: slipUrl, // Aluth ekak nam, slipUrl eka (upload unoth URL eka, nathnam null)
+                        source: 'manual',
+                        createdAt: serverTimestamp()
+                    };
+                    
+                    const transactionPath = `/artifacts/${appId}/profiles/${activeProfile}/transactions`;
+                    await addDoc(collection(db, transactionPath), transactionData);
+                }
+
                 transactionModal.classList.add('hidden');
+                currentEditId = null; // Form eka close karanakota edit ID eka reset karanna
 
             } catch (error) {
                 console.error("Error saving transaction:", error);
-                alert(error.message); // Error eka user ta pennamu
+                alert(error.message); 
             } finally {
                 saveTransactionBtn.disabled = false;
                 saveTransactionBtn.textContent = 'Save';
+                currentEditId = null; // Error ekak unath reset karanna
             }
         });
 
@@ -952,7 +1080,99 @@
             }
         });
 
-        // Modal Close Buttons
+        
+        // --- ALUTH: Edit/Delete/Balance Functions ---
+
+        // 1. Table eke buttons click karama wena de
+        transactionTableBody.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.edit-btn');
+            const deleteBtn = e.target.closest('.delete-btn');
+
+            if (editBtn) {
+                handleEditTransaction(editBtn.dataset.id);
+            } else if (deleteBtn) {
+                handleDeleteTransaction(deleteBtn.dataset.id);
+            }
+        });
+
+        // 2. Edit button eka click karama
+        function handleEditTransaction(id) {
+            const transaction = allTransactions.find(t => t.id === id);
+            if (!transaction) {
+                console.error("Transaction not found!");
+                return;
+            }
+
+            currentEditId = id; // Global variable eka set karanna
+
+            // Modal eka data walin purawanna
+            modalTitle.textContent = "Edit Transaction";
+            document.getElementById('transactionType').value = transaction.type;
+            document.getElementById('transactionDesc').value = transaction.description;
+            document.getElementById('transactionAmount').value = transaction.amount;
+            document.getElementById('transactionSlip').value = null; // File input reset karanna
+
+            // Slip eka gana note eka wenas karanna
+            const slipText = document.querySelector('label[for="transactionSlip"] + p');
+            if (transaction.slipUrl) {
+                if(slipText) slipText.innerHTML = `An existing slip is attached. <a href="${transaction.slipUrl}" target="_blank" class="text-purple-600 underline">View it</a>. Upload a new file to replace it.`;
+            } else {
+                if(slipText) slipText.textContent = "You can optionally attach a slip.";
+            }
+
+            // Modal eka open karanna
+            transactionModal.classList.remove('hidden');
+        }
+
+        // 3. Delete button eka click karama
+        async function handleDeleteTransaction(id) {
+            if (confirm("Are you sure you want to delete this transaction?\nThis action cannot be undone.")) {
+                try {
+                    const docRef = doc(db, `/artifacts/${appId}/profiles/${activeProfile}/transactions`, id);
+                    await deleteDoc(docRef);
+                    console.log("Transaction deleted successfully!");
+                    // onSnapshot eka nisa UI eka auto update wei
+                } catch (error) {
+                    console.error("Error deleting transaction:", error);
+                    alert("Failed to delete transaction.");
+                }
+            }
+        }
+
+        // 4. Add Balance (+) button eka click karama
+        addBalanceBtn.addEventListener('click', () => {
+            balanceForm.reset();
+            balanceModal.classList.remove('hidden');
+        });
+
+        // 5. Add Balance modal eka submit karama
+        balanceForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!activeProfile) return;
+            saveBalanceBtn.disabled = true;
+            saveBalanceBtn.textContent = 'Saving...';
+            
+            const balanceData = {
+                amount: parseFloat(document.getElementById('balanceAmount').value),
+                description: document.getElementById('balanceDesc').value || "Manual Deposit",
+                createdAt: serverTimestamp()
+            };
+            
+            try {
+                const balancePath = `/artifacts/${appId}/profiles/${activeProfile}/balanceEntries`;
+                await addDoc(collection(db, balancePath), balanceData);
+                balanceModal.classList.add('hidden');
+            } catch (error) {
+                console.error("Error saving balance entry:", error);
+                alert("Error saving data.");
+            } finally {
+                saveBalanceBtn.disabled = false;
+                saveBalanceBtn.textContent = 'Add to Balance';
+            }
+        });
+
+
+        // 6. Okkoma Modal Open/Close Buttons handle karanna (WENAS KALA)
         addIncomeBtn.addEventListener('click', () => openTransactionModal('income'));
         addExpenseBtn.addEventListener('click', () => openTransactionModal('expense'));
         addSavingBtn.addEventListener('click', openSavingModal);
@@ -961,6 +1181,8 @@
             btn.addEventListener('click', () => {
                 transactionModal.classList.add('hidden');
                 savingModal.classList.add('hidden');
+                balanceModal.classList.add('hidden'); // <-- ALUTH
+                currentEditId = null; // Modal close karaddi edit ID eka reset karanna
             });
         });
         
